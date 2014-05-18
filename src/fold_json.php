@@ -11,18 +11,17 @@ require_once(dirname(__FILE__).'/cast_json.php');
  */
 function unframed_fold_json($fun, $maxLength=16384, $maxDepth=512) {
 	try {
-		$json = unframed_post_json_body($maxLength, $maxDepth);
+		$messages = unframed_cast_receive($maxLength, $maxDepth);
 	} catch (Unframed $error) {
 		http_response_code($e->getCode());
 		echo $e->getMessage(), "\n";
 	}
-	if (isset($json)) {
-		$messages = $json['messages'];
+	if (isset($messages)) {
 		$message = array_pop($messages);
 		if (!empty($messages)) {
-			unframed_call_json(unframed_cast_url(), $request);
+			unframed_cast(unframed_cast_url(), $messages);
 		}
-		unframed_ok_json(array('time'=> microtime(TRUE)));
-		unframed_call($fun, array($message));
+		unframed_cast_ok();
+		unframed_call($fun, array($message, $messages));
 	}
 }

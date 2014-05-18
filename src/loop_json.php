@@ -43,20 +43,20 @@ function unframed_loop_continue () {
 }
 
 /**
- * Accept a JSON request POSTed, fail or handle it with $fun and then, if
- * the return value is not negative, call the same script's own URL before 
- * it terminates.
+ * Accept a JSON request POSTed, fail or handle it with $fun and if
+ * the return value is not negative make sure script's own URL is called
+ * before this instance terminates.
  */
 function unframed_loop ($fun) {
 	try {
-		$json = unframed_post_json_body(16384, 2);	
+		$json = unframed_cast_json_body(16384, 2);
 	} catch (Unframed $error) {
 		http_response_code($e->getCode());
 		echo $e->getMessage(), "\n";
 	}
 	if (isset($json)) {
-		unframed_ok_json(array('time' => microtime()));
 		register_shutdown_function('unframed_loop_continue');
+		unframed_cast_ok();
 	    $interval = unframed_call($fun, array($request_time, $response_time));
 		if ($interval < 0) {
 			define('UNFRAMED_LOOP_CONTINUE', FALSE);
