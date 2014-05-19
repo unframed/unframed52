@@ -8,13 +8,11 @@ $method = $_SERVER['REQUEST_METHOD'];
 if ($method == 'GET') { // Send cast message
 
 	function unframed_cast_test ($request) {
+		$r = unframed_properties($request);
 		touch('unframed_cast_test');
 		$time = time();
-		$r = new UnframedProperties($request);
-		$sleep = $r->getFloat('sleep', 3.000);
-		unframed_cast(unframed_cast_url(), $request);
-		// sleep($sleep+1);
-		sleep(4.0);
+		unframed_cast(unframed_cast_url(), $request, $r->asFloat('timeout', 0.05));
+		sleep($r->asFloat('sleep', 3) + 1);
 		return array(
 			'pass' => !file_exists('unframed_cast_test'),
 			'slept' => time() - $time
@@ -25,10 +23,8 @@ if ($method == 'GET') { // Send cast message
 } elseif ($method == 'POST') { // Receive cast message
 
 	function unframed_cast_test ($request) {
-		unframed_debug('cast', time());
-		sleep(3.0);
-		// sleep($r->getFloat('sleep', 3.000) - $r->getFloat('timeout', 0.050));
-		unframed_debug('cast', time());
+		$r = unframed_properties($request);
+		sleep($r->asFloat('sleep', 3) - $r->asFloat('timeout', 0.05));
 		unlink('unframed_cast_test');
 	}
 	unframed_cast_json('unframed_cast_test');
