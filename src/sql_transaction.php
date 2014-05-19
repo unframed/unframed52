@@ -13,9 +13,9 @@ require_once(dirname(__FILE__).'/Unframed.php');
  * @return PDO
  */
 function unframed_sql_open($dsn, $username=NULL, $password=NULL) {
-	$pdo = new PDO($dsn, $username, $password);
-	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-	return $pdo;
+    $pdo = new PDO($dsn, $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    return $pdo;
 }
 
 /**
@@ -27,7 +27,7 @@ function unframed_sql_open($dsn, $username=NULL, $password=NULL) {
  * @return PDO
  */
 function unframed_sqlite_open($database, $path='../sql/') {
-	return unframed_sql_open('sqlite:'.$path.$database, NULL, NULL);
+    return unframed_sql_open('sqlite:'.$path.$database, NULL, NULL);
 }
 
 /**
@@ -44,21 +44,21 @@ function unframed_sqlite_open($database, $path='../sql/') {
  * @throws Unframed
  */
 function unframed_sql_transaction($pdo, $fun, $array) {
-	$transaction = FALSE;
-	if (!isset($array)) {
-		$array = array($pdo);
-	}
-	try {
-		$transaction = $pdo->beginTransaction();
-		$result = unframed_call($fun, $array);
-		$pdo->commit();
-		return $result;
-	} catch (Exception $e) {
-		if ($transaction) {
-			$pdo->rollBack();
-		}
-		throw new Unframed($e->getMessage(), 500, $e);
-	}
+    $transaction = FALSE;
+    if (!isset($array)) {
+        $array = array($pdo);
+    }
+    try {
+        $transaction = $pdo->beginTransaction();
+        $result = unframed_call($fun, $array);
+        $pdo->commit();
+        return $result;
+    } catch (Exception $e) {
+        if ($transaction) {
+            $pdo->rollBack();
+        }
+        throw new Unframed($e->getMessage(), 500, $e);
+    }
 }
 
 /**
@@ -76,34 +76,34 @@ function unframed_sql_transaction($pdo, $fun, $array) {
  * @throws Unframed if the execution failed without PDOException
  */
 function unframed_sql_execute($pdo, $sql, $parameters) {
-	$st = $pdo->prepare($sql);
-	if ($st->execute($parameters)) {
-		return $st;
-	}
-	throw new Unframed($st->errorInfo()[2]);
+    $st = $pdo->prepare($sql);
+    if ($st->execute($parameters)) {
+        return $st;
+    }
+    throw new Unframed($st->errorInfo()[2]);
 }
 
 function unframed_sql_statement ($pdo, $statement, $parameters) {
-	$st =  $pdo->prepare($statement);
-	if ($st->execute($parameters)) {
-		if (preg_match('/^select/i', $statement)>0) {
-			return array("fetchAll"=>$st->fetchAll());
-		} elseif (preg_match('/^(insert|replace|update|delete)/i', $statement)>0) {
-			return array("rowCount"=>$st->rowCount());
-		}
-		return array();
-	}
-	throw new Unframed($st->errorInfo()[2]);
+    $st =  $pdo->prepare($statement);
+    if ($st->execute($parameters)) {
+        if (preg_match('/^select/i', $statement)>0) {
+            return array("fetchAll"=>$st->fetchAll());
+        } elseif (preg_match('/^(insert|replace|update|delete)/i', $statement)>0) {
+            return array("rowCount"=>$st->rowCount());
+        }
+        return array();
+    }
+    throw new Unframed($st->errorInfo()[2]);
 }
 
 function unframed_sql_statements ($pdo, $statements) {
-	foreach ($statements as $sql) {
-		$st = $pdo->prepare($sql);
-		if (!$st->execute()) {
-			throw new Unframed($st->errorInfo()[2]);
-		}
-	}
-	return TRUE;
+    foreach ($statements as $sql) {
+        $st = $pdo->prepare($sql);
+        if (!$st->execute()) {
+            throw new Unframed($st->errorInfo()[2]);
+        }
+    }
+    return TRUE;
 }
 
 /**
@@ -119,5 +119,5 @@ function unframed_sql_statements ($pdo, $statements) {
  * @throws Unframed if the execution failed without PDOException
  */
 function unframed_sql_declare($pdo, $statements) {
-	return unframed_sql_transaction($pdo, 'unframed_sql_statements', array($pdo, $statements));
+    return unframed_sql_transaction($pdo, 'unframed_sql_statements', array($pdo, $statements));
 }

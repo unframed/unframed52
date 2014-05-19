@@ -27,19 +27,16 @@ require_once(dirname(__FILE__).'/fold_json.php');
 
 define('UNFRAMED_LOOP_TIME', microtime(TRUE));
 
-define('UNFRAMED_LOOP_URL', unframed_cast_url());
-
 /**
  * Call the loop's own URL if `UNFRAMED_LOOP_CONTINUE` is defined and true. 
  */
 function unframed_loop_continue () {
-	if (!defined('UNFRAMED_LOOP_CONTINUE') || !UNFRAMED_LOOP_CONTINUE) {
-		return;
-	}
-	unframed_call_json(UNFRAMED_LOOP_URL, array(
-		'time' => UNFRAMED_LOOP_TIME, 
-		'connection' => connection_status()
-		));
+    if (defined('UNFRAMED_LOOP_CONTINUE') && UNFRAMED_LOOP_CONTINUE) {
+        unframed_cast(unframed_cast_url(), array(
+            'time' => UNFRAMED_LOOP_TIME, 
+            'connection' => connection_status()
+            ));
+    }
 }
 
 /**
@@ -48,21 +45,21 @@ function unframed_loop_continue () {
  * before this instance terminates.
  */
 function unframed_loop ($fun) {
-	try {
-		$json = unframed_cast_json_body(16384, 2);
-	} catch (Unframed $error) {
-		http_response_code($e->getCode());
-		echo $e->getMessage(), "\n";
-	}
-	if (isset($json)) {
-		register_shutdown_function('unframed_loop_continue');
-		unframed_cast_ok();
-	    $interval = unframed_call($fun, array($request_time, $response_time));
-		if ($interval < 0) {
-			define('UNFRAMED_LOOP_CONTINUE', FALSE);
-		} else {
-			define('UNFRAMED_LOOP_CONTINUE', TRUE);
-			sleep($interval);
-		}
-	}
+    try {
+        $json = unframed_cast_receive();
+    } catch (Unframed $error) {
+        http_response_code($e->getCode());
+        echo $e->getMessage(), "\n";
+    }
+    if (isset($json)) {
+        register_shutdown_function('unframed_loop_continue');
+        unframed_cast_ok();
+        $interval = unframed_call($fun, array());
+        if ($interval < 0) {
+            define('UNFRAMED_LOOP_CONTINUE', FALSE);
+        } else {
+            define('UNFRAMED_LOOP_CONTINUE', TRUE);
+            sleep($interval);
+        }
+    }
 }

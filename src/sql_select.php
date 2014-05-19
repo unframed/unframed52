@@ -15,11 +15,11 @@ require_once(dirname(__FILE__).'/sql_transaction.php');
  * @throws Unframed
  */
 function unframed_sql_select_keys($pdo, $table, $column) {
-	$st = $pdo->prepare("SELECT DISTINCT ".$column." FROM ".$table);
-	if ($st->execute(array())) {
-		return $st->fetchAll(PDO::FETCH_COLUMN);
-	}
-	throw new Unframed($st->errorInfo()[2]);
+    $st = $pdo->prepare("SELECT DISTINCT ".$column." FROM ".$table);
+    if ($st->execute(array())) {
+        return $st->fetchAll(PDO::FETCH_COLUMN);
+    }
+    throw new Unframed($st->errorInfo()[2]);
 }
 
 /**
@@ -36,12 +36,12 @@ function unframed_sql_select_keys($pdo, $table, $column) {
  * @throws Unframed
  */
 function unframed_sql_select_like($pdo, $table, $column, $like) {
-	$st = $pdo->prepare("SELECT ".$column." FROM ".$table." WHERE ".$column." = ?");
-	$st->bindValue(1, $key);
-	if ($st->execute()) {
-		return $st->fetchAll(PDO::FETCH_COLUMN);
-	}
-	throw new Unframed($st->errorInfo()[2]);
+    $st = $pdo->prepare("SELECT ".$column." FROM ".$table." WHERE ".$column." = ?");
+    $st->bindValue(1, $key);
+    if ($st->execute()) {
+        return $st->fetchAll(PDO::FETCH_COLUMN);
+    }
+    throw new Unframed($st->errorInfo()[2]);
 }
 
 /**
@@ -59,13 +59,13 @@ function unframed_sql_select_like($pdo, $table, $column, $like) {
  * @throws Unframed
  */
 function unframed_sql_select_object($pdo, $table, $column, $key) {
-	$sql = "SELECT * FROM ".$table." WHERE ".$column." = ?";
-	$st = $pdo->prepare($sql);
-	$st->bindValue(1, $key);
-	if ($st->execute()) {
-		return $st->fetch(PDO::FETCH_ASSOC);
-	}
-	throw new Unframed($st->errorInfo()[2]);
+    $sql = "SELECT * FROM ".$table." WHERE ".$column." = ?";
+    $st = $pdo->prepare($sql);
+    $st->bindValue(1, $key);
+    if ($st->execute()) {
+        return $st->fetch(PDO::FETCH_ASSOC);
+    }
+    throw new Unframed($st->errorInfo()[2]);
 }
 
 /**
@@ -82,9 +82,9 @@ function unframed_sql_select_object($pdo, $table, $column, $key) {
  * @throws Unframed
  */
 function unframed_sql_select($pdo, $statement, $parameters) {
-	$st = $pdo->prepare($statement);
-	if ($st->execute($parameters)) {
-		return $st->fetchAll(PDO::FETCH_ASSOC);
-	}
-	throw new Unframed($st->errorInfo()[2]);
+    $st = $pdo->prepare($statement);
+    if ($st->execute($parameters)) {
+        return $st->fetchAll(PDO::FETCH_ASSOC);
+    }
+    throw new Unframed($st->errorInfo()[2]);
 }

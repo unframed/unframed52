@@ -55,18 +55,18 @@ class Unframed extends Exception {
  * @throws Unframed 
  */
 function unframed_call ($fun, $array) {
-	if (!is_array($array)) {
-		throw new Unframed('Type Error - '.var_export($array, TRUE).' is not an array');
-	}
-	if (is_string($fun)) {
-		if (function_exists($fun)) {
-			return call_user_func_array($fun, $array);
-		} else {
-			throw new Unframed('Name Error - '.$fun);
-		}
-	} elseif (is_callable($fun)) {
-		return call_user_func_array($fun, $array);
-	} else {
-		throw new Unframed('Type Error - '.var_export($fun, TRUE).' is not callable');
-	}
+    if (!is_array($array)) {
+        throw new Unframed('Type Error - '.var_export($array, TRUE).' is not an array');
+    }
+    if (is_string($fun)) {
+        if (function_exists($fun)) {
+            return call_user_func_array($fun, $array);
+        } else {
+            throw new Unframed('Name Error - '.$fun);
+        }
+    } elseif (is_callable($fun)) {
+        return call_user_func_array($fun, $array);
+    } else {
+        throw new Unframed('Type Error - '.var_export($fun, TRUE).' is not callable');
+    }
 }

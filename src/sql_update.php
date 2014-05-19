@@ -17,15 +17,15 @@ require_once(dirname(__FILE__).'/sql_transaction.php');
  * @throws PDOException
  */
 function unframed_sql_update_key($pdo, $table, $column, $key, $values) {
-	$keys = array_keys($values);
-	$updates = implode(', ', array_map(function($k) {
-		return $k." = :".$k;
-	}, $keys));
-	$values['unframed_sql_update_key'] = $key;
-	$sql = "UPDATE ".$table." SET ".$updates." WHERE ".$column." = :unframed_sql_update_key";
-	$st = $pdo->prepare($sql);
-	if ($st->execute($values)) {
-		return $st->rowCount();
-	}
-	throw new Unframed($st->errorInfo()[2]);
+    $keys = array_keys($values);
+    $updates = implode(', ', array_map(function($k) {
+        return $k." = :".$k;
+    }, $keys));
+    $values['unframed_sql_update_key'] = $key;
+    $sql = "UPDATE ".$table." SET ".$updates." WHERE ".$column." = :unframed_sql_update_key";
+    $st = $pdo->prepare($sql);
+    if ($st->execute($values)) {
+        return $st->rowCount();
+    }
+    throw new Unframed($st->errorInfo()[2]);
 }

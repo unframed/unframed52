@@ -11,15 +11,15 @@ require_once(dirname(__FILE__).'/sql_insert.php');
  * @param any $value
  */
 function unframed_sql_type ($value) {
-	if (is_float($value)) {
-		return "REAL NOT NULL";
-	} elseif (is_numeric($value)) {
-		return "INTEGER NOT NULL";
-	} elseif (is_string($value)) {
-		return "TEXT NOT NULL";
-	} else {
-		return "TEXT";
-	} 
+    if (is_float($value)) {
+        return "REAL NOT NULL";
+    } elseif (is_numeric($value)) {
+        return "INTEGER NOT NULL";
+    } elseif (is_string($value)) {
+        return "TEXT NOT NULL";
+    } else {
+        return "TEXT";
+    } 
 }
 
 /**
@@ -41,34 +41,34 @@ function unframed_sql_type ($value) {
  * @throws PDOException, Unframed
  */
 function unframed_sql_post($pdo, $table, $values, $primary) {
-	$keys = array_keys($values);
-	//
-	$columns = implode(', ', array_map(function($key) use ($values) {
-		$type = unframed_sql_type($values[$key]);
-		return $key." ".$type;
-	}, $keys));
-	$sql = "CREATE TABLE ".$table." IF NOT EXIST (".$columns.", PRIMARY KEY (".$primary."));";
-	$st = $pdo->prepare($sql);
-	if (!$st->execute()) {
-		throw new Unframed($st->errorInfo()[2]);
-	}
-	//
-	$columns = implode(', ', $keys);
-	$parameters = implode(', ', array_map(function($key) {
-		 return "?";
-	}, $keys));
-	$sql = $verb." INTO ".$table." (".$columns.") VALUES (".$parameters.")";
-	$st = $pdo->prepare($sql);
-	for ($index = 0, $L = count($keys); $index < $L; $index++) {
-		$value = $values[$keys[$index]];
-		if (is_scalar($value)) {
-			$st->bindValue($index, $value); // flat is better ...
-		} else {
-			$st->bindValue($index, json_encode($value)); // ... than nested
-		}
-	}
-	if (!$st->execute()) {
-		throw new Unframed($st->errorInfo()[2]);
-	}
-	return $st->rowCount();
+    $keys = array_keys($values);
+    //
+    $columns = implode(', ', array_map(function($key) use ($values) {
+        $type = unframed_sql_type($values[$key]);
+        return $key." ".$type;
+    }, $keys));
+    $sql = "CREATE TABLE ".$table." IF NOT EXIST (".$columns.", PRIMARY KEY (".$primary."));";
+    $st = $pdo->prepare($sql);
+    if (!$st->execute()) {
+        throw new Unframed($st->errorInfo()[2]);
+    }
+    //
+    $columns = implode(', ', $keys);
+    $parameters = implode(', ', array_map(function($key) {
+         return "?";
+    }, $keys));
+    $sql = $verb." INTO ".$table." (".$columns.") VALUES (".$parameters.")";
+    $st = $pdo->prepare($sql);
+    for ($index = 0, $L = count($keys); $index < $L; $index++) {
+        $value = $values[$keys[$index]];
+        if (is_scalar($value)) {
+            $st->bindValue($index, $value); // flat is better ...
+        } else {
+            $st->bindValue($index, json_encode($value)); // ... than nested
+        }
+    }
+    if (!$st->execute()) {
+        throw new Unframed($st->errorInfo()[2]);
+    }
+    return $st->rowCount();
 }

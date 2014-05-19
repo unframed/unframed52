@@ -17,19 +17,19 @@ require_once(dirname(__FILE__).'/sql_transaction.php');
  * @throws Unframed if the execution failed without throwing a PDOException
  */
 function unframed_sql_insert_values($pdo, $table, $values, $verb='INSERT') {
-	$keys = array_keys($values);
-	$columns = implode(', ', array_map(function($key) {
-		 return "'$key'";
-	}, $keys));
-	$parameters = implode(', ', array_map(function($key) {
-		 return ":$key";
-	}, $keys));
-	$sql = $verb." INTO ".$table." (".$columns.") VALUES (".$parameters.")";
-	$st = $pdo->prepare($sql);
-	if ($st->execute($values)) {
-		return $st->rowCount();
-	}
-	throw new Unframed($st->errorInfo()[2]);
+    $keys = array_keys($values);
+    $columns = implode(', ', array_map(function($key) {
+         return "'$key'";
+    }, $keys));
+    $parameters = implode(', ', array_map(function($key) {
+         return ":$key";
+    }, $keys));
+    $sql = $verb." INTO ".$table." (".$columns.") VALUES (".$parameters.")";
+    $st = $pdo->prepare($sql);
+    if ($st->execute($values)) {
+        return $st->rowCount();
+    }
+    throw new Unframed($st->errorInfo()[2]);
 }
 
 /**
@@ -46,5 +46,5 @@ function unframed_sql_insert_values($pdo, $table, $values, $verb='INSERT') {
  * @throws Unframed if the execution failed without throwing a PDOException
  */
 function unframed_sql_replace_values($pdo, $table, $values) {
-	return unframed_sql_insert_values($pdo, $table, $values, $verb='REPLACE');
+    return unframed_sql_insert_values($pdo, $table, $values, $verb='REPLACE');
 }

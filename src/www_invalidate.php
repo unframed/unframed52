@@ -10,11 +10,11 @@ paths second, allways in lexycographical order.
 
 For instance :
 
-	/about.html
-	/index.html
-	/index.json
-	/article/0.html
-	/article/0.json
+    /about.html
+    /index.html
+    /index.json
+    /article/0.html
+    /article/0.json
 
 Templates developpers may leverage that sort order to re-use the
 side-effects of the template applied for the /index.html page in 
@@ -23,48 +23,48 @@ the template that generates the /article/0.html page.
 */
 
 function unframed_www_path_add ($root, $path) {
-	$names = explode('/', $path);
-	$last = count($names) - 1;
-	if ($last > 0) {
-		$node = $root;
-		for ($index=0; $index < $last; $index++) {
-			$name = $names[$index];
-			$next = $node[$name];
-			if (!isset($next)) {
-				$next = array();
-				$node[$name] = $next;
-			}
-			$node = $next;
-		}
-		$node[$names[$last]] = $path;
-	} else {
-		$root[$path] = $path;
-	}
+    $names = explode('/', $path);
+    $last = count($names) - 1;
+    if ($last > 0) {
+        $node = $root;
+        for ($index=0; $index < $last; $index++) {
+            $name = $names[$index];
+            $next = $node[$name];
+            if (!isset($next)) {
+                $next = array();
+                $node[$name] = $next;
+            }
+            $node = $next;
+        }
+        $node[$names[$last]] = $path;
+    } else {
+        $root[$path] = $path;
+    }
 }
 
 function unframed_www_path_step ($paths, $node) {
-	$down = array();
-	foreach(sort(array_keys($paths)) as $name) {
-		$path = $node[$name];
-		if (is_string($path)) {
-			array_push($paths, $path);
-		} else {
-			array_push($down, $name);
-		}
-	}
-	foreach($down as $name) {
-		unframed_www_path_step($paths, $node[$name]);
-	}
+    $down = array();
+    foreach(sort(array_keys($paths)) as $name) {
+        $path = $node[$name];
+        if (is_string($path)) {
+            array_push($paths, $path);
+        } else {
+            array_push($down, $name);
+        }
+    }
+    foreach($down as $name) {
+        unframed_www_path_step($paths, $node[$name]);
+    }
 }
 
 function unframed_www_sort ($paths) {
-	$root = array();
-	foreach ($paths as $path) {
-		unframed_www_path_add($root, $path);
-	}
-	$sorted = array();
-	unframed_www_path_step($sorted, $root);
-	return $sorted; 
+    $root = array();
+    foreach ($paths as $path) {
+        unframed_www_path_add($root, $path);
+    }
+    $sorted = array();
+    unframed_www_path_step($sorted, $root);
+    return $sorted; 
 }
 
 /**
@@ -86,23 +86,23 @@ function unframed_www_sort ($paths) {
  * @return array of catched exceptions keyed by template path.
  */
 function unframed_www_invalidate(
-	$unframed_resource, 
-	$unframed_routes, 
-	$unframed_pdo,
-	$unframed_www='../www/',
-	$unframed_php='../php/'
-	) {
-	$unframed_paths = unframed_www_sort(array_keys($unframed_routes));
-	$unframed_errors = array();
-	foreach ($unframed_paths as $unframed_path) {
-		ob_start();
-		try {
-			include $unframed_php.$unframed_routes[$unframed_path];
-			file_put_contents($unframed_www.$unframed_path, ob_get_contents());
-		} catch (Exception $e) {
-			$unframed_errors[$unframed_path] = $e;
-		}
-		ob_end_clean();
-	}
-	return $unframed_errors;
+    $unframed_resource, 
+    $unframed_routes, 
+    $unframed_pdo,
+    $unframed_www='../www/',
+    $unframed_php='../php/'
+    ) {
+    $unframed_paths = unframed_www_sort(array_keys($unframed_routes));
+    $unframed_errors = array();
+    foreach ($unframed_paths as $unframed_path) {
+        ob_start();
+        try {
+            include $unframed_php.$unframed_routes[$unframed_path];
+            file_put_contents($unframed_www.$unframed_path, ob_get_contents());
+        } catch (Exception $e) {
+            $unframed_errors[$unframed_path] = $e;
+        }
+        ob_end_clean();
+    }
+    return $unframed_errors;
 }

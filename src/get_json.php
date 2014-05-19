@@ -29,11 +29,11 @@ if (!function_exists('json_last_error')) {
  * @throws Unframed
  */
 function unframed_get_query() {
-	if ($_SERVER['REQUEST_METHOD']!=='GET') {
-		throw new Unframed('Method Not Allowed', 405);
-	} else {
-		return $_GET;
-	}
+    if ($_SERVER['REQUEST_METHOD']!=='GET') {
+        throw new Unframed('Method Not Allowed', 405);
+    } else {
+        return $_GET;
+    }
 }
 
 /**
@@ -49,33 +49,33 @@ function unframed_get_query() {
  * @throws Unframed
  */
 function unframed_ok_json($json, $options=0) {
-	$accept = $_SERVER['HTTP_ACCEPT'];
-	if (preg_match('/application.json/i', $accept) < 1) {
-		$options = $options | JSON_PRETTY_PRINT;
-	}
-	$body = json_encode($json, $options);
-	if (is_string($body)) {
-		http_response_code(200);
-		header("Content-length: ".strlen($body));
-		header('Content-Type: application/json');
-		echo $body;
-		flush();
-	} else {
-		throw new Unframed(json_last_error_msg());
-	}
+    $accept = $_SERVER['HTTP_ACCEPT'];
+    if (preg_match('/application.json/i', $accept) < 1) {
+        $options = $options | JSON_PRETTY_PRINT;
+    }
+    $body = json_encode($json, $options);
+    if (is_string($body)) {
+        http_response_code(200);
+        header("Content-length: ".strlen($body));
+        header('Content-Type: application/json');
+        echo $body;
+        flush();
+    } else {
+        throw new Unframed(json_last_error_msg());
+    }
 }
 
 /**
  * ...
  */
 function unframed_error_json($e) {
-	$json = array('Error' => $e->getMessage());
-	$body = json_encode($json, JSON_PRETTY_PRINT);
-	http_response_code($e->getCode());
-	header("Content-length: ".strlen($body));
-	header('Content-Type: application/json');
-	echo $body;
-	flush();
+    $json = array('Error' => $e->getMessage());
+    $body = json_encode($json, JSON_PRETTY_PRINT);
+    http_response_code($e->getCode());
+    header("Content-length: ".strlen($body));
+    header('Content-Type: application/json');
+    echo $body;
+    flush();
 }
 
 /**
@@ -84,9 +84,9 @@ function unframed_error_json($e) {
  * exception, reply with an error code and a JSON error message.
  */
 function unframed_get_json($fun) {
-	try {
-		unframed_ok_json(unframed_call($fun, array(unframed_get_query())));
-	} catch (Unframed $e) {
-		unframed_error_json($e);
-	}
+    try {
+        unframed_ok_json(unframed_call($fun, array(unframed_get_query())));
+    } catch (Unframed $e) {
+        unframed_error_json($e);
+    }
 }
