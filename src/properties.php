@@ -19,6 +19,14 @@ class UnframedProperties {
 		}
 		return $default;
 	}
+	function setDefault($key, $default) {
+		$value = $this->array[$key];
+		if (isset($value)) {
+			return $value;
+		}
+		$this->array[$key] = $default;
+		return $default;
+	}
 	function getString($key, $default=NULL) {
 		$value = $this->getDefault($key, $default);
 		if (!is_string($value)) {
@@ -53,6 +61,15 @@ class UnframedProperties {
 			throw new Unframed('Type Error - $key must be an Array');
 		}
 		return $value;
+	}
+	function asInt($key, $default=NULL) {
+		return intval($this->getString($key, strval($default)));
+	}
+	function asFloat($key, $default=NULL) {
+		return floatval($this->getString($key, strval($default)));
+	}
+	function asBool($key, $default=NULL) {
+		return $this->getString($key, strval($default)) == 'true';
 	}
 }
 
