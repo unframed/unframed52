@@ -25,11 +25,10 @@ function unframed_loop_json ($fun, $seconds=30, $semaphore='.unframed_loop') {
     if (isset($json)) {
         unframed_cast_ok();
         if (!(file_exists($semaphore) && (time() - filemtime($semaphore) < $seconds))) {
-            // register_shutdown_function('unframed_loop_continue');
             touch($semaphore);
             $state = unframed_call($fun, array($json));
             if ($state == NULL) {
-                unlink($semaphore);
+                @unlink($semaphore);
             } else {
                 sleep($seconds);
                 if (file_exists($semaphore)) {
@@ -50,7 +49,7 @@ function unframed_loop_start ($message, $uri=NULL, $semaphore='.unframed_loop') 
 
 function unframed_loop_stop ($semaphore='.unframed_loop') {
     if (file_exists($semaphore)) {
-        unlink($semaphore);
+        @unlink($semaphore);
         return TRUE;
     }
     return FALSE;
