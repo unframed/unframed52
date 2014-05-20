@@ -56,7 +56,7 @@ function unframed_cast_ok () {
  * Try to return the $json message decoded from a request body submitted
  * by a local address, or fail.
  */
-function unframed_cast_receive ($maxLength, $maxDepth) {
+function unframed_cast_receive ($maxLength=16384, $maxDepth=512) {
     $remote = $_SERVER['REMOTE_ADDR']; 
     if (!($remote == '127.0.0.1' || $remote == $_SERVER['SERVER_ADDR'])) {
         throw new Unframed('Unauthorized '.$_SERVER['REMOTE_ADDR'], 403);    
