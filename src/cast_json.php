@@ -8,7 +8,7 @@ function unframed_cast_url($uri=null) {
     return (
         "http".(!empty($_SERVER['HTTPS'])?"s":"")."://"
         .$_SERVER['SERVER_NAME'].':'.$_SERVER['SERVER_PORT']
-        .url_parse($uri==null?$_SERVER['REQUEST_URI']:$uri)->path
+        .parse_url($uri==null?$_SERVER['REQUEST_URI']:$uri)->path
         );
 }
 
@@ -46,10 +46,12 @@ function unframed_cast ($url, $request, $timeout=0.05) {
  * Send an HTTP 200 response with zero content, flush and continue ...
  */
 function unframed_cast_ok () {
-    http_response_code(200);
-    header("Connection: close");
-    header("Content-length: 0");
-    flush();
+    if (!connection_aborted()) {
+        http_response_code(200);
+        header("Connection: close");
+        header("Content-length: 0");
+        flush();
+    }
 }
 
 /**
