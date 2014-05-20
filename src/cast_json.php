@@ -8,7 +8,7 @@ function unframed_cast_url($uri=null) {
     return (
         "http".(!empty($_SERVER['HTTPS'])?"s":"")."://"
         .$_SERVER['SERVER_NAME'].':'.$_SERVER['SERVER_PORT']
-        .($uri==null?$_SERVER['REQUEST_URI']:$uri)
+        .url_parse($uri==null?$_SERVER['REQUEST_URI']:$uri)->path
         );
 }
 
