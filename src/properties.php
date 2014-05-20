@@ -20,9 +20,8 @@ class UnframedProperties {
      * @throws Unframed exception with a name error
      */
     function getDefault($key, $default=NULL) {
-        $value = $this->array[$key];
-        if (isset($value)) {
-            return $value;
+        if (array_key_exists($key, $this->array)) {
+            return $this->array[$key];
         }
         if ($default===NULL) {
             throw new Unframed('Name Error - '.$key.' missing');
@@ -40,9 +39,8 @@ class UnframedProperties {
      * @return any $this->array[$key] or $default
      */
     function setDefault($key, $default) {
-        $value = $this->array[$key];
-        if (isset($value)) {
-            return $value;
+        if (array_key_exists($key, $this->array)) {
+            return $this->array[$key];
         }
         $this->array[$key] = $default;
         return $default;
