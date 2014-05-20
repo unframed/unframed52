@@ -12,7 +12,7 @@ if ($method == 'GET') { // Send cast message
         $command = $r->getString('command', 'status');
         if ($command == 'start') {
             return array('start' => unframed_loop_start(
-                array('countdown' => $r->getInt('countdown', 10))
+                array('countdown' => $r->asInt('countdown', 10))
                 ));
         } elseif ($command == 'stop') {
             return array('stop' => unframed_loop_stop());
@@ -35,7 +35,7 @@ if ($method == 'GET') { // Send cast message
         return array('countdown' => $countdown);
     }
     unframed_loop_json('unframed_loop_test', 3);
-    
+
 } else { // 405
 
     unframed_json_error(new Unframed('Invalid Method', 405));
