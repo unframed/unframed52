@@ -26,7 +26,7 @@ function unframed_sql_open($dsn, $username=NULL, $password=NULL) {
  *
  * @return PDO
  */
-function unframed_sqlite_open($database, $path='../sql/') {
+function unframed_sqlite_open($database, $path='./') {
     return unframed_sql_open('sqlite:'.$path.$database, NULL, NULL);
 }
 

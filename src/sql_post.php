@@ -22,6 +22,14 @@ function unframed_sql_type ($value) {
     } 
 }
 
+function unframed_sql_columns ($values) {
+    $columns = array(); 
+    foreach ($values as $key => $value) {
+        array_push($columns, $key." ".unframed_sql_type($value));
+    }
+    return $columns;
+}
+
 /**
  * For the given PDO connection : if it does not exist create a 
  * $table with $primary key, $values's column names and types ;
@@ -43,23 +51,19 @@ function unframed_sql_type ($value) {
 function unframed_sql_post($pdo, $table, $values, $primary) {
     $keys = array_keys($values);
     //
-    $columns = implode(', ', array_map(function($key) use ($values) {
-        $type = unframed_sql_type($values[$key]);
-        return $key." ".$type;
-    }, $keys));
+    $columns = implode(', ', unframed_sql_columns($values));
     $sql = "CREATE TABLE ".$table." IF NOT EXIST (".$columns.", PRIMARY KEY (".$primary."));";
     $st = $pdo->prepare($sql);
     if (!$st->execute()) {
         throw new Unframed($st->errorInfo()[2]);
     }
     //
+    $L = count($keys);
     $columns = implode(', ', $keys);
-    $parameters = implode(', ', array_map(function($key) {
-         return "?";
-    }, $keys));
+    $parameters = implode(', ', array_fill(0, $L, '?'));
     $sql = $verb." INTO ".$table." (".$columns.") VALUES (".$parameters.")";
     $st = $pdo->prepare($sql);
-    for ($index = 0, $L = count($keys); $index < $L; $index++) {
+    for ($index = 0; $index < $L; $index++) {
         $value = $values[$keys[$index]];
         if (is_scalar($value)) {
             $st->bindValue($index, $value); // flat is better ...

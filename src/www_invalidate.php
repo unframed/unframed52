@@ -89,8 +89,8 @@ function unframed_www_invalidate(
     $unframed_resource, 
     $unframed_routes, 
     $unframed_pdo,
-    $unframed_www='../www/',
-    $unframed_php='../php/'
+    $unframed_www='./',
+    $unframed_php='./'
     ) {
     $unframed_paths = unframed_www_sort(array_keys($unframed_routes));
     $unframed_errors = array();
