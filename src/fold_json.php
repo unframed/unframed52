@@ -3,7 +3,8 @@
 require_once(dirname(__FILE__).'/cast_json.php');
 
 /**
- * Handle a POSTed JSON request with $fun ... after a response is sent.
+ * Handle a POSTed JSON array's first message with $fun after a response is sent
+ * and the rest of the messages are casted to the same script.
  *
  * @param callable $fun to handle the POSTed JSON request
  * @param int $maxLength of the JSON request body, defaults to 16384 bytes
