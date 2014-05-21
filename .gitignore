@@ -1,4 +1,3 @@
 # exclude dependencies and test data.
 deps/*
-sql/*
-www/*
+test/out/*
