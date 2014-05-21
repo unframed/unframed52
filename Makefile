@@ -14,9 +14,8 @@ deps/jsbn-min.js:
 	git clone https://github.com/laurentszyster/jsbn-min.js deps/jsbn-min.js
 
 clean:
-	cp php/templates/init.php www/index.html
-	rm sql/*.db -f
-	rm www/doc -rf
+	rm deps/* -rf
+	rm test/out/* -f
 
 install:
 	sudo apt-get install \
