@@ -14,12 +14,12 @@ require_once(dirname(__FILE__).'/get_json.php');
  *
  * @return array
  */
-function unframed_post_json_body($maxLength=16384, $maxDepth=512, $options=0) {
+function unframed_post_json_body($maxLength=16384, $maxDepth=512, $assoc=TRUE, $options=0) {
     if ($_SERVER['REQUEST_METHOD']!=='POST') {
         throw new Unframed('Method Not Allowed', 405);
     }
     $body = file_get_contents('php://input', NULL, NULL, NULL, $maxLength);
-    $json = json_decode($body, true, $maxDepth, $options|JSON_BIGINT_AS_STRING);
+    $json = json_decode($body, $assoc, $maxDepth, $options|JSON_BIGINT_AS_STRING);
     if ($json === NULL) {
         throw new Unframed(json_last_error_msg(), 400);
     } else {
