@@ -4,11 +4,17 @@ require_once(dirname(__FILE__).'/post_json.php');
 
 // How to cast a JSON message to a relative URL in PHP 5.2
 
-function unframed_cast_url($uri=null) {
+/**
+ * Return the complete URL of the given $uri or the script's URL if
+ * $uri is NULL.
+ * 
+ * @param string $uri to complete, NULL by default
+ */
+function unframed_cast_url($uri=NULL) {
     return (
         "http".(!empty($_SERVER['HTTPS'])?"s":"")."://"
         .$_SERVER['SERVER_NAME'].':'.$_SERVER['SERVER_PORT']
-        .(parse_url($uri==null?$_SERVER['REQUEST_URI']:$uri)['path'])
+        .(parse_url($uri==NULL?$_SERVER['REQUEST_URI']:$uri)['path'])
         );
 }
 
@@ -55,6 +61,12 @@ function unframed_cast_ok () {
 /**
  * Try to return the $json message decoded from a request body submitted
  * by a local address, or fail.
+ *
+ * @param int $maxLength of the JSON body accepted, defaults to 16384
+ * @param int $maxDepth of the JSON message accepted, defaults to 512
+ *
+ * @return array
+ * @throws Unframed 
  */
 function unframed_cast_receive ($maxLength=16384, $maxDepth=512) {
     $remote = $_SERVER['REMOTE_ADDR']; 
@@ -70,6 +82,8 @@ function unframed_cast_receive ($maxLength=16384, $maxDepth=512) {
  * @param callable $fun to handle the POSTed JSON request
  * @param int $maxLength of the JSON request body, defaults to 16384 bytes
  * @param in $maxDepth of the JSON request, defaults to 512
+ *
+ * @throws Unframed 
  */
 function unframed_cast_json ($fun, $maxLength=16384, $maxDepth=512) {
     try {

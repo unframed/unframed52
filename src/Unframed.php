@@ -25,17 +25,14 @@ if (!function_exists('http_response_code')) {
 }
 
 /**
- * Log a debug $message about a $value 
+ * Log a debug $message about a $value.
  */
 function unframed_debug($message, $value) {
     return error_log($message.' - '.var_export($value, true));
 }
 
 /**
- * Unframed extends Exception
- *
  * Fail fast to an HTTP error response.
- * 
  */
 class Unframed extends Exception {
     public function __construct($message, $code=500, Exception $previous=null) {

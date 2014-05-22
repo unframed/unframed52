@@ -22,12 +22,17 @@ function unframed_sql_type ($value) {
     } 
 }
 
-function unframed_sql_columns ($values) {
-    $columns = array(); 
-    foreach ($values as $key => $value) {
-        array_push($columns, $key." ".unframed_sql_type($value));
+function unframed_sql_column ($value, $key) {
+    return $key." ".unframed_sql_type($value);
+}
+
+function unframed_sql_create ($pdo, $table, $values, $primary) {
+    $columns = implode(', ', array_walk($values, 'unframed_sql_column'));
+    $sql = "CREATE TABLE ".$table." IF NOT EXIST (".$columns.", PRIMARY KEY (".$primary."));";
+    $st = $pdo->prepare($sql);
+    if (!$st->execute()) {
+        throw new Unframed($st->errorInfo()[2]);
     }
-    return $columns;
 }
 
 /**
@@ -48,16 +53,9 @@ function unframed_sql_columns ($values) {
  *
  * @throws PDOException, Unframed
  */
-function unframed_sql_post($pdo, $table, $values, $primary) {
+function unframed_sql_post($pdo, $table, $values, $primary, $verb="REPLACE") {
+    unframed_sql_create($pdo, $table, $values, $primary);
     $keys = array_keys($values);
-    //
-    $columns = implode(', ', unframed_sql_columns($values));
-    $sql = "CREATE TABLE ".$table." IF NOT EXIST (".$columns.", PRIMARY KEY (".$primary."));";
-    $st = $pdo->prepare($sql);
-    if (!$st->execute()) {
-        throw new Unframed($st->errorInfo()[2]);
-    }
-    //
     $L = count($keys);
     $columns = implode(', ', $keys);
     $parameters = implode(', ', array_fill(0, $L, '?'));

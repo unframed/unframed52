@@ -39,6 +39,15 @@ function unframed_loop_json ($fun, $seconds=30, $semaphore='.unframed_loop') {
     }
 }
 
+/**
+ * Start a loop by casting a $message to its $uri, using the $semaphore as guard.
+ *
+ * @param array $message to send
+ * @param string $uri to cast, default to the script's URI
+ * @param string $semaphore filename, defaults to '.unframed_loop'
+ *
+ * @return TRUE on success, FALSE otherwise
+ */
 function unframed_loop_start ($message, $uri=NULL, $semaphore='.unframed_loop') {
     if (!file_exists($semaphore)) {
         unframed_cast(unframed_cast_url($uri), $message);
@@ -47,6 +56,13 @@ function unframed_loop_start ($message, $uri=NULL, $semaphore='.unframed_loop') 
     return FALSE;
 }
 
+/**
+ * Stop a loop by deleting its $semaphore.
+ *
+ * @param string $semaphore filename, defaults to '.unframed_loop'
+ *
+ * @return TRUE on success, FALSE otherwise
+ */
 function unframed_loop_stop ($semaphore='.unframed_loop') {
     if (file_exists($semaphore)) {
         @unlink($semaphore);
@@ -55,6 +71,13 @@ function unframed_loop_stop ($semaphore='.unframed_loop') {
     return FALSE;
 }
 
+/**
+ * Get the last time a loop ran by stating its $semaphore.
+ *
+ * @param string $semaphore filename, defaults to '.unframed_loop'
+ *
+ * @return 0 if the loop is not running
+ */
 function unframed_loop_status ($semaphore='.unframed_loop') {
     if (file_exists($semaphore)) {
         return filemtime($semaphore);
