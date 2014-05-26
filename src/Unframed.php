@@ -32,11 +32,24 @@ function unframed_debug($message, $value) {
 }
 
 /**
- * Fail fast to an HTTP error response.
+ * Fail fast to an HTTP error response, make sure to support nested exceptions.
  */
-class Unframed extends Exception {
-    public function __construct($message, $code=500, Exception $previous=null) {
-        parent::__construct($message, $code, $previous);
+if (method_exists(new Exception(), 'getPrevious')) {
+    class Unframed extends Exception {
+        public function __construct($message, $code=500, Exception $previous=NULL) {
+            parent::__construct($message, $code, $previous);
+        }
+    }
+} else {
+    class Unframed extends Exception {
+        private $previous = NULL;
+        public function __construct($message, $code=500, Exception $previous=NULL) {
+            parent::__construct($message, $code);
+            $this->previous = $previous;
+        }
+        function getPrevious() {
+            return $this->previous;
+        }
     }
 }
 
