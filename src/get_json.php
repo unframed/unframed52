@@ -48,21 +48,24 @@ function unframed_get_query() {
  *
  * @throws Unframed
  */
-function unframed_ok_json($json, $options=0) {
-    $accept = $_SERVER['HTTP_ACCEPT'];
-    if (preg_match('/application.json/i', $accept) < 1) {
-        $options = $options | JSON_PRETTY_PRINT;
-    }
-    $body = json_encode($json, $options);
-    if (is_string($body)) {
-        http_response_code(200);
-        header("Content-length: ".strlen($body));
-        header('Content-Type: application/json');
-        echo $body;
-        flush();
+function unframed_ok_json($json, $options=0, $is_list=FALSE) {
+    if ($is_list) {
+        $body = '['.implode(',', $json).']';
     } else {
-        throw new Unframed(json_last_error_msg());
+        $accept = $_SERVER['HTTP_ACCEPT'];
+        if (preg_match('/application.json/i', $accept) < 1) {
+            $options = $options | JSON_PRETTY_PRINT;
+        }
+        $body = json_encode($json, $options);
+        if (!is_string($body)) {
+            throw new Unframed(json_last_error_msg());
+        }
     }
+    http_response_code(200);
+    header("Content-length: ".strlen($body));
+    header('Content-Type: application/json');
+    echo $body;
+    flush();
 }
 
 /**
@@ -82,10 +85,12 @@ function unframed_error_json($e) {
  * Apply a $fun that handles the parsed query string of a GET request and returns
  * an array that will be sent as a JSON body in the HTTP response, catch any Unframed
  * exception, reply with an error code and a JSON error message.
+ *
+ * @param 
  */
-function unframed_get_json($fun) {
+function unframed_get_json($fun, $is_list=FALSE) {
     try {
-        unframed_ok_json(unframed_call($fun, array(unframed_get_query())));
+        unframed_ok_json(unframed_call($fun, array(unframed_get_query())), $is_list);
     } catch (Unframed $e) {
         unframed_error_json($e);
     }
