@@ -14,8 +14,8 @@ require_once(dirname(__FILE__).'/sql_transaction.php');
  * @throws PDOException
  * @throws Unframed
  */
-function unframed_sql_select_keys($pdo, $table, $column) {
-    $st = $pdo->prepare("SELECT DISTINCT ".$column." FROM ".$table);
+function unframed_sql_select_column($pdo, $table, $column, $constraint="") {
+    $st = $pdo->prepare("SELECT ".$constraint." ".$column." FROM ".$table);
     if ($st->execute(array())) {
         return $st->fetchAll(PDO::FETCH_COLUMN);
     }
