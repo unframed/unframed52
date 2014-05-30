@@ -18,6 +18,10 @@ ignore_user_abort(true);
 
 // Second, shim PHP 5.2
 
+if (!defined('__DIR__')) {
+    define('__DIR__', dirname(__FILE__));
+}
+
 if (!function_exists('http_response_code')) {
     function http_response_code($code) {
         header('x', TRUE, $code);
