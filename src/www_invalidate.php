@@ -79,30 +79,40 @@ function unframed_www_sort ($paths) {
  * `unframed_pdo`, a conveniece to add more statements to an opened 
  * transaction or simply select data to fill the template. 
  *
- * @param $unframed_resource object that represent the resource to template.
- * @param $unframed_route array of URL keys and file paths to PHP templates.
- * @param $unframed_pdo PDO connection to a database.
+ * @param array $unframed_resource the data used to invalidate the web cache.
+ * @param array $unframed_route map URIs to either callable or PHP templates.
  *
  * @return array of catched exceptions keyed by template path.
  */
 function unframed_www_invalidate(
     $unframed_resource, 
     $unframed_routes, 
-    $unframed_pdo,
     $unframed_www='./',
     $unframed_php='./'
     ) {
     $unframed_paths = unframed_www_sort(array_keys($unframed_routes));
     $unframed_errors = array();
     foreach ($unframed_paths as $unframed_path) {
-        ob_start();
-        try {
-            include $unframed_php.$unframed_routes[$unframed_path];
-            file_put_contents($unframed_www.$unframed_path, ob_get_contents());
-        } catch (Exception $e) {
-            $unframed_errors[$unframed_path] = $e;
+        $route = $unframed_routes[$unframed_path];
+        if (is_callable($route, TRUE)) {
+            try {
+                file_put_contents(
+                    $unframed_www.$unframed_path, 
+                    call_user_func_array($route, $array($unframed_resource))
+                    );
+            } catch (Exception $e) {
+                $unframed_errors[$unframed_path] = $e;
+            }
+        } else {
+            ob_start();
+            try {
+                include $unframed_php.$route;
+                file_put_contents($unframed_www.$unframed_path, ob_get_contents());
+            } catch (Exception $e) {
+                $unframed_errors[$unframed_path] = $e;
+            }
+            ob_end_clean();
         }
-        ob_end_clean();
     }
     return $unframed_errors;
 }
