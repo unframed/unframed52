@@ -22,12 +22,12 @@ function unframed_sql_open($dsn, $username=NULL, $password=NULL) {
  * Opens a PDO connection to an SQLite `$database` in the application's sql path
  * sets its error mode to PDO::ERRMODE_EXCEPTION and return a PDO object.
  *
- * @param string $database the name of the database file to open
+ * @param string $filename of the database to open
  *
  * @return PDO
  */
-function unframed_sqlite_open($database, $path='./') {
-    return unframed_sql_open('sqlite:'.$path.$database, NULL, NULL);
+function unframed_sqlite_open ($filename, $path='./') {
+    return unframed_sql_open('sqlite:'.$path.$filename, NULL, NULL);
 }
 
 /**
@@ -39,7 +39,7 @@ function unframed_sqlite_open($database, $path='./') {
  * @param function $fun to apply
  * @param array $array of arguments, default to array($pdo) 
  *
- * @return the $fun result
+ * @return any $fun result
  *
  * @throws Unframed
  */
@@ -83,6 +83,18 @@ function unframed_sql_execute($pdo, $sql, $parameters) {
     throw new Unframed($st->errorInfo()[2]);
 }
 
+/**
+ * Prepare and execute a parametrized SQL statement, then either: fetch and return
+ * all SELECTed results; return the number of row INSERTed, UPDATEd or DELETEd;
+ * or return an empty array for any other type of SQL statement.
+ *
+ * @param PDO $pdo connection to the SQL database
+ * @param string $statement to prepare and execute
+ * @param array $parameters to apply
+ *
+ * @return any
+ * @throws PDOException
+ */
 function unframed_sql_statement ($pdo, $statement, $parameters) {
     $st =  $pdo->prepare($statement);
     if ($st->execute($parameters)) {
@@ -96,6 +108,15 @@ function unframed_sql_statement ($pdo, $statement, $parameters) {
     throw new Unframed($st->errorInfo()[2]);
 }
 
+/**
+ * Prepare and execute many SQL statements without parameters
+ *
+ * @param PDO $pdo connection to the SQL database
+ * @param array $statements to prepare and execute
+ *
+ * @return TRUE
+ * @throws PDOException
+ */
 function unframed_sql_statements ($pdo, $statements) {
     foreach ($statements as $sql) {
         $st = $pdo->prepare($sql);
@@ -107,13 +128,13 @@ function unframed_sql_statements ($pdo, $statements) {
 }
 
 /**
- * Prepare and execute an array of SQL statement or throw an Unframed
+ * Prepare and execute an array of SQL statements or throw an Unframed
  * exception if an execution failed without PDOException.
  *
  * @param PDO $pdo the database connection to use
  * @param array $statements to execute
  *
- * @return void
+ * @return TRUE
  *
  * @throws PDOException if $pdo error mode was set to exceptions
  * @throws Unframed if the execution failed without PDOException
