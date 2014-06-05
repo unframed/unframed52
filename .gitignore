@@ -1,4 +1,5 @@
 # exclude dependencies and test data.
 deps/*
+priv/*
 test/sites/*/out
 test/sites/*/run
