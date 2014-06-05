@@ -1,0 +1,8 @@
+{
+	"httpHost": "127.0.0.52:8090",
+	"httpServer": "nginx",
+	"links": { 
+		"src": "unframed52" 
+		},
+	"testUnits": []
+}

@@ -1,0 +1,8 @@
+{
+	"httpHost": "127.0.0.52:8089",
+	"httpServer": "apache2",
+	"links": { 
+		"src": "unframed52" 
+		},
+	"testUnits": []
+}
