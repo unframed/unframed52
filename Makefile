@@ -30,7 +30,7 @@ clean:
 
 install:
 	sudo apt-get install \
-		wget curl zip unzip zipmerge git python php5 \
+		wget curl zip unzip zipmerge git python php5 php5-sqlite \
 		apache2 libapache2-mod-php5 \
 		nginx php5-fpm php5-mysql \
 		mysql-client mysql-server \
