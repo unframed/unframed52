@@ -52,11 +52,15 @@ function unframed_ok_json($json, $options=0, $is_list=FALSE) {
     if ($is_list) {
         $body = '['.implode(',', $json).']';
     } else {
-        $accept = $_SERVER['HTTP_ACCEPT'];
-        if (preg_match('/application.json/i', $accept) < 1) {
-            $options = $options | JSON_PRETTY_PRINT;
+        if (defined('JSON_PRETTY_PRINT')) {
+            $accept = $_SERVER['HTTP_ACCEPT'];
+            if (preg_match('/application.json/i', $accept) < 1) {
+                $options = $options | JSON_PRETTY_PRINT;
+            }
+            $body = json_encode($json, $options);
+        } else {
+            $body = json_encode($json);
         }
-        $body = json_encode($json, $options);
         if (!is_string($body)) {
             throw new Unframed(json_last_error_msg());
         }
