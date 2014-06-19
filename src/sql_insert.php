@@ -33,7 +33,8 @@ function unframed_sql_insert_values($pdo, $table, $values, $verb='INSERT') {
     if ($st->execute($values)) {
         return $st->rowCount();
     }
-    throw new Unframed($st->errorInfo()[2]);
+    $info = $st->errorInfo();
+    throw new Unframed($info[2]);
 }
 
 /**

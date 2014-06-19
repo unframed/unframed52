@@ -19,7 +19,8 @@ function unframed_sql_select_column($pdo, $table, $column, $constraint="") {
     if ($st->execute(array())) {
         return $st->fetchAll(PDO::FETCH_COLUMN);
     }
-    throw new Unframed($st->errorInfo()[2]);
+    $info = $st->errorInfo();
+    throw new Unframed($info[2]);
 }
 
 /**
@@ -41,7 +42,8 @@ function unframed_sql_select_like($pdo, $table, $column, $like) {
     if ($st->execute()) {
         return $st->fetchAll(PDO::FETCH_COLUMN);
     }
-    throw new Unframed($st->errorInfo()[2]);
+    $info = $st->errorInfo();
+    throw new Unframed($info[2]);
 }
 
 /**
@@ -65,7 +67,8 @@ function unframed_sql_select_object($pdo, $table, $column, $key) {
     if ($st->execute()) {
         return $st->fetch(PDO::FETCH_ASSOC);
     }
-    throw new Unframed($st->errorInfo()[2]);
+    $info = $st->errorInfo();
+    throw new Unframed($info[2]);
 }
 
 /**
@@ -86,5 +89,6 @@ function unframed_sql_select($pdo, $statement, $parameters) {
     if ($st->execute($parameters)) {
         return $st->fetchAll(PDO::FETCH_ASSOC);
     }
-    throw new Unframed($st->errorInfo()[2]);
+    $info = $st->errorInfo();
+    throw new Unframed($info[2]);
 }

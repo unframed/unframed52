@@ -34,7 +34,8 @@ function unframed_sql_script($database, $statements) {
             if($stmt->execute($statements[$i][1])) {
                 array_push($response, $stmt->fetchAll(PDO::FETCH_NUM));
             } elseif (!$pdo->rollBack()) {
-                throw new Unframed($stmt->errorInfo()[2]);
+                $info = $stmt->errorInfo();
+                throw new Unframed($info[2]);
             } else {
                 return $response;
             }

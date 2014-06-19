@@ -28,5 +28,6 @@ function unframed_sql_update_key($pdo, $table, $column, $key, $values) {
     if ($st->execute($values)) {
         return $st->rowCount();
     }
-    throw new Unframed($st->errorInfo()[2]);
+    $info = $st->errorInfo();
+    throw new Unframed($info[2]);
 }

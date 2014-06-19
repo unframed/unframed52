@@ -23,5 +23,6 @@ function unframed_sql_delete_key($pdo, $table, $column, $key) {
             return $st->rowCount();
         }
     }
-    throw new Unframed($st->errorInfo()[2]);
+    $info = $st->errorInfo();
+    throw new Unframed($info[2]);
 }

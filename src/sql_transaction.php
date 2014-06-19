@@ -80,7 +80,8 @@ function unframed_sql_execute($pdo, $sql, $parameters) {
     if ($st->execute($parameters)) {
         return $st;
     }
-    throw new Unframed($st->errorInfo()[2]);
+    $info = $st->errorInfo();
+    throw new Unframed($info[2]);
 }
 
 /**
@@ -105,7 +106,8 @@ function unframed_sql_statement ($pdo, $statement, $parameters) {
         }
         return array();
     }
-    throw new Unframed($st->errorInfo()[2]);
+    $info = $st->errorInfo();
+    throw new Unframed($info[2]);
 }
 
 /**
@@ -121,7 +123,8 @@ function unframed_sql_statements ($pdo, $statements) {
     foreach ($statements as $sql) {
         $st = $pdo->prepare($sql);
         if (!$st->execute()) {
-            throw new Unframed($st->errorInfo()[2]);
+            $info = $st->errorInfo();
+            throw new Unframed($info[2]);
         }
     }
     return TRUE;
