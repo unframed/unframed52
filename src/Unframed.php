@@ -16,12 +16,6 @@
 
 ignore_user_abort(true);
 
-// Second, shim PHP 5.2
-
-if (!defined('__DIR__')) {
-    define('__DIR__', dirname(__FILE__));
-}
-
 if (!function_exists('http_response_code')) {
     function http_response_code($code) {
         header('x', TRUE, $code);
@@ -29,7 +23,12 @@ if (!function_exists('http_response_code')) {
 }
 
 /**
- * Log a debug $message about a $value.
+ * Log an error $message about a $value.
+ *
+ * @param $message to log
+ * @param $value to print
+ *
+ * @return TRUE on success, FALSE otherwise
  */
 function unframed_debug($message, $value) {
     return error_log($message.' - '.var_export($value, true));
@@ -39,18 +38,28 @@ function unframed_debug($message, $value) {
  * Fail fast to an HTTP error response, make sure to support nested exceptions.
  */
 if (method_exists(new Exception(), 'getPrevious')) {
+    /**
+     * Extends the base `Exception` class, set the default code to 500.
+     */
     class Unframed extends Exception {
         public function __construct($message, $code=500, Exception $previous=NULL) {
             parent::__construct($message, $code, $previous);
         }
     }
 } else {
+    /**
+     * Extends the base `Exception` class, set the default code to 500 and provide
+     * a shim for `Exception::getPrevious`.
+     */
     class Unframed extends Exception {
         private $previous = NULL;
         public function __construct($message, $code=500, Exception $previous=NULL) {
             parent::__construct($message, $code);
             $this->previous = $previous;
         }
+        /**
+         * Get the nested exception.
+         */
         function getPrevious() {
             return $this->previous;
         }
@@ -82,5 +91,28 @@ function unframed_call ($fun, $array) {
         return call_user_func_array($fun, $array);
     } else {
         throw new Unframed('Type Error - '.var_export($fun, TRUE).' is not callable');
+    }
+}
+
+/**
+ * Test if the real path to the SCRIPT_FILENAME is $filename.
+ *
+ * @param string $filename tested
+ *
+ * @return TRUE if $filename is the real path to SCRIP_FILENAME
+ */
+function unframed_main ($filename) {
+    return realpath($_SERVER['SCRIPT_FILENAME']) == $filename;
+}
+
+/**
+ * If this __FILE__ is the script run, test basic requirements of Unframed52
+ * and reply with 204 No Content on success or 500 Server Error on failure.
+ */
+if (unframed_main(__FILE__)) {
+    if (version_compare(PHP_VERSION, '5.2.0') >= 0 && ignore_user_abort() == TRUE) {
+        http_response_code(204); // No content, test pass
+    } else {
+        http_response_code(500); // Server error, test fail
     }
 }

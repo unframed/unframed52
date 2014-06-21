@@ -3,11 +3,17 @@
 require_once(dirname(__FILE__).'/Unframed.php');
 
 /**
- * A convenience to get typed properties from an array, a default or fail.
+ * A convenience to get typed properties from an associative array, a default or fail.
  */
-class UnframedProperties {
+class UnframedMessage {
     function __construct($array) {
         $this->array = $array;
+    }
+    /**
+     * Get the values of the wrapped associative array as a list 
+     */
+    function asList () {
+        return array_values($this->array);
     }
     /**
      * Get the value of $key in $this->array if it is set, or a
@@ -172,11 +178,11 @@ class UnframedProperties {
 }
 
 /**
- * A properties factory.
+ * An UnframedMessage factory.
  */
-function unframed_properties($array) {
+function unframed_message($array) {
     if (!is_array($array)) {
         throw new Unframed('Type Error - '.var_export($array).' is not an array');
     }
-    return new UnframedProperties($array);
+    return new UnframedMessage($array);
 }

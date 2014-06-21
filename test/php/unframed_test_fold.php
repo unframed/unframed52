@@ -1,7 +1,6 @@
 <?php
 
 require '../../src/fold_json.php';
-require '../../src/properties.php';
 
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -12,11 +11,10 @@ if ($method == 'GET') { // Send cast message
         return count(glob('unframed_fold_test_*')); 
     }
 
-    function unframed_fold_test ($request) {
-        $r = unframed_properties($request);
-        $wait = $r->asFloat('wait', 10);
-        $timeout = $r->asFloat('timeout', 0.05);
-        $L = $r->asInt('concurrent', 2);
+    function unframed_fold_test ($message) {
+        $wait = $message->asFloat('wait', 10);
+        $timeout = $message->asFloat('timeout', 0.05);
+        $L = $message->asInt('concurrent', 2);
         $messages = array();
         for ($i = 0 ; $i < $L; $i++) {
             array_push($messages, array('filename'=>'unframed_fold_test_'.$i));
@@ -42,9 +40,9 @@ if ($method == 'GET') { // Send cast message
 
 } elseif ($method == 'POST') { // Receive cast message
 
-    function unframed_fold_test ($message, $rest) {
+    function unframed_fold_test ($head, $tail) {
         sleep(1);
-        unlink($message['filename']);
+        unlink($head['filename']);
     }
     unframed_fold_json('unframed_fold_test');
 

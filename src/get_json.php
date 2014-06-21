@@ -1,6 +1,7 @@
 <?php 
 
 require_once(dirname(__FILE__).'/Unframed.php');
+require_once(dirname(__FILE__).'/properties.php');
 
 if (!function_exists('json_last_error')) {
     function json_last_error_msg() {
@@ -22,9 +23,10 @@ if (!function_exists('json_last_error')) {
 }
 
 /**
- * Returns the query parameters of a GET request as an array.
+ * Returns the query parameters of a GET request as an UnframedMessage instance
+ * or throws an Unframed error 405 if the request method is not GET.
  *
- * @return array
+ * @return UnframedMessage
  *
  * @throws Unframed
  */
@@ -32,7 +34,7 @@ function unframed_get_query() {
     if ($_SERVER['REQUEST_METHOD']!=='GET') {
         throw new Unframed('Method Not Allowed', 405);
     } else {
-        return $_GET;
+        return unframed_message($_GET);
     }
 }
 
@@ -41,15 +43,16 @@ function unframed_get_query() {
  * JSON response body. Note that if 'application/json' is not in the $_SERVER['HTTP_ACCEPT']
  * the JSON will be pretty printed.
  *
- * @param array $json the JSON response
- * @param int $options passed to json_encode
+ * @param array $json the JSON response, may be an list of JSON encoded strings
+ * @param array $iolist whether $json is a list of JSON strings, default to FALSE 
+ * @param int $options passed to json_encode, default to 0
  *
  * @return void
  *
  * @throws Unframed
  */
-function unframed_ok_json($json, $options=0, $is_list=FALSE) {
-    if ($is_list) {
+function unframed_ok_json($json, $options=0, $iolist=FALSE) {
+    if ($iolist) {
         $body = '['.implode(',', $json).']';
     } else {
         if (defined('JSON_PRETTY_PRINT')) {
@@ -77,7 +80,11 @@ function unframed_ok_json($json, $options=0, $is_list=FALSE) {
  */
 function unframed_error_json($e) {
     $json = array('Error' => $e->getMessage());
-    $body = json_encode($json, JSON_PRETTY_PRINT);
+    if (defined('JSON_PRETTY_PRINT')) {
+        $body = json_encode($json, JSON_PRETTY_PRINT);
+    } else {
+        $body = json_encode($json);
+    }
     http_response_code($e->getCode());
     header("Content-length: ".strlen($body));
     header('Content-Type: application/json');
@@ -92,9 +99,9 @@ function unframed_error_json($e) {
  *
  * @param 
  */
-function unframed_get_json($fun, $is_list=FALSE) {
+function unframed_get_json($fun, $iolist=FALSE) {
     try {
-        unframed_ok_json(unframed_call($fun, array(unframed_get_query())), $is_list);
+        unframed_ok_json(unframed_call($fun, array(unframed_get_query())), $iolist);
     } catch (Unframed $e) {
         unframed_error_json($e);
     }

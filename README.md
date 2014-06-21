@@ -20,12 +20,10 @@ Here's unframed52's "Hello World" example, accepting GET queries :
 ~~~php
 <?php
 require 'unframed52/get_json.php';
-require 'unframed52/properties.php';
 
-function hello_world ($query) {
-    $r = unframed_properties($query);
+function hello_world ($message) {
     return array(
-        'say' => 'Hello '.$r->getString('who', 'World'); 
+        'say' => 'Hello '.$message->getString('who', 'World'); 
         );
 }
 
@@ -42,17 +40,15 @@ Here's the same "Hello World" example, accepting POST request and invalidating J
 ~~~php
 <?php
 require 'unframed52/post_json.php';
-require 'unframed52/properties.php';
 require 'unframed52/www_invalidate.php';
 
 function hello_world_json ($r) {
     return json_encode($r->array);
 }
 
-function hello_world ($request) {
-    $r = unframed_properties($request);
-    $who = $r->getString('who', 'World');
-    return www_invalidate($r, array(
+function hello_world ($message) {
+    $who = $message->getString('who', 'World');
+    return www_invalidate($message, array(
         '/hello/'.$who.'.json' => 'hello_world_json',
         '/hello/'.$who.'.html' => 'hello_world_html.php'
         ));
@@ -88,18 +84,16 @@ Again, let's say 'Hello World' and cache it but only if we can update a database
 ~~~php
 <?php
 require 'unframed52/post_json.php';
-require 'unframed52/properties.php';
 require 'unframed52/www_invalidate.php';
 require 'unframed52/sql_json.php';
 
-function hello_world_json ($properties) {
-    return json_encode($properties->array);
+function hello_world_json ($message) {
+    return json_encode($message->array);
 }
 
-function hello_world ($request) {
+function hello_world ($message) {
     # validate the API
-    $r = unframed_properties($request);
-    $who = $r->getString('who', 'World');
+    $who = $message->getString('who', 'World');
     # declare the JSON data model
     $pdo = unframed_sqlite_json('hello_world.db', array(
         'who' => array(
@@ -110,10 +104,10 @@ function hello_world ($request) {
     unframed_sql_transaction(
         $pdo, 
         'unframed_sql_json_replace', 
-        array($pdo, 'who', $request)
+        array($pdo, 'who', $message->array)
         );
     # invalidate the REST ,-)
-    return www_invalidate($r, array(
+    return www_invalidate($message->array, array(
         '/hello/'.$who.'.json' => 'hello_world_json',
         '/hello/'.$who.'.html' => 'hello_world_html.php'
         ));
@@ -134,7 +128,7 @@ Getting a list of JSON values from a table created and updated this way is a lot
 require 'unframed52/get_json.php';
 require 'unframed52/sql_select.php';
 
-function hello_worlds ($query) {
+function hello_worlds ($message) {
     return unframed_sql_select_column(
         unframed_sqlite_open('hello_world.db'), 'who', 'who_json'
         );

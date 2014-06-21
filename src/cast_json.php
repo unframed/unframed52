@@ -64,16 +64,17 @@ function unframed_cast_ok () {
  *
  * @param int $maxLength of the JSON body accepted, defaults to 16384
  * @param int $maxDepth of the JSON message accepted, defaults to 512
+ * @param int $options JSON options, default to 0
  *
- * @return array
+ * @return UnframedMessage
  * @throws Unframed 
  */
-function unframed_cast_receive ($maxLength=16384, $maxDepth=512) {
+function unframed_cast_receive ($maxLength=16384, $maxDepth=512, $options=0) {
     $remote = $_SERVER['REMOTE_ADDR']; 
     if (!($remote == '127.0.0.1' || $remote == $_SERVER['SERVER_ADDR'])) {
         throw new Unframed('Unauthorized '.$_SERVER['REMOTE_ADDR'], 403);    
     }
-    return unframed_post_json_body($maxLength, $maxDepth);    
+    return unframed_post_json_body($maxLength, $maxDepth, $options);    
 }
 
 /**
@@ -87,13 +88,13 @@ function unframed_cast_receive ($maxLength=16384, $maxDepth=512) {
  */
 function unframed_cast_json ($fun, $maxLength=16384, $maxDepth=512) {
     try {
-        $json = unframed_cast_receive($maxLength, $maxDepth);
+        $message = unframed_cast_receive($maxLength, $maxDepth);
     } catch (Unframed $e) {
         http_response_code($e->getCode());
         echo $e->getMessage(), "\n";
     }
-    if (isset($json)) {
+    if (isset($message)) {
         unframed_cast_ok();
-        unframed_call($fun, array($json));
+        unframed_call($fun, array($message));
     }
 }

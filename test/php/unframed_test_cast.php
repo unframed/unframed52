@@ -1,18 +1,20 @@
 <?php
 
 require '../../src/cast_json.php';
-require '../../src/properties.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method == 'GET') { // Send cast message
 
-    function unframed_cast_test ($request) {
-        $r = unframed_properties($request);
+    function unframed_cast_test ($message) {
         touch('unframed_cast_test');
         $time = time();
-        unframed_cast(unframed_cast_url(), $request, $r->asFloat('timeout', 0.05));
-        sleep($r->asFloat('sleep', 3) + 1);
+        unframed_cast(
+            unframed_cast_url(), 
+            $message->array, 
+            $message->asFloat('timeout', 0.05)
+            );
+        sleep($message->asFloat('sleep', 3) + 1);
         return array(
             'pass' => !file_exists('unframed_cast_test'),
             'slept' => time() - $time
@@ -22,9 +24,8 @@ if ($method == 'GET') { // Send cast message
 
 } elseif ($method == 'POST') { // Receive cast message
 
-    function unframed_cast_test ($request) {
-        $r = unframed_properties($request);
-        sleep($r->asFloat('sleep', 3) - $r->asFloat('timeout', 0.05));
+    function unframed_cast_test ($message) {
+        sleep($message->asFloat('sleep', 3) - $message->asFloat('timeout', 0.05));
         unlink('unframed_cast_test');
     }
     unframed_cast_json('unframed_cast_test');

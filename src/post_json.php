@@ -3,8 +3,8 @@
 require_once(dirname(__FILE__).'/get_json.php');
 
 /**
- * Returns the JSON body of $maxLength bytes from a POST request, decoded as an array of $maxDepth
- * or throw an exception.
+ * Returns the JSON body of $maxLength bytes from a POST request, decoded as an array of 
+ * $maxDepth and wrapped in an UnframedMessage or throw an exception.
  *
  * @param int $maxLength the maximum length of the request JSON body
  * @param int $maxDepth the maximum depth of the request JSON object
@@ -12,18 +12,22 @@ require_once(dirname(__FILE__).'/get_json.php');
  *
  * Note that the JSON_BIGINT_AS_STRING option is allways set for json_decode.
  *
- * @return array
+ * @return UnframedMessage
  */
-function unframed_post_json_body($maxLength=16384, $maxDepth=512, $assoc=TRUE, $options=0) {
+function unframed_post_json_body($maxLength=16384, $maxDepth=512, $options=0) {
     if ($_SERVER['REQUEST_METHOD']!=='POST') {
         throw new Unframed('Method Not Allowed', 405);
     }
     $body = file_get_contents('php://input', NULL, NULL, NULL, $maxLength);
-    $json = json_decode($body, $assoc, $maxDepth, $options|JSON_BIGINT_AS_STRING);
+    if (defined('JSON_BIGINT_AS_STRING')) {
+        $json = json_decode($body, TRUE, $maxDepth, $options|JSON_BIGINT_AS_STRING);
+    } else {
+        $json = json_decode($body, TRUE, $maxDepth);
+    }
     if ($json === NULL) {
         throw new Unframed(json_last_error_msg(), 400);
     } else {
-        return $json;
+        return unframed_message($json);
     }
 }
 
@@ -32,16 +36,17 @@ function unframed_post_json_body($maxLength=16384, $maxDepth=512, $assoc=TRUE, $
  * an array that will be sent as a JSON body in the HTTP response.
  *
  * @param function $fun the function to apply
+ * @param bool $iolist wether the response is a list of JSON strings, default to FALSE 
  * @param int $maxLength the maximum length of the request JSON body
  * @param int $maxDepth the maximum depth of the request JSON object
  *
- * @return void or an exception
+ * @return void
  */
-function unframed_post_json($fun, $maxLength=16384, $maxDepth=512) {
+function unframed_post_json($fun, $iolist=FALSE, $maxLength=16384, $maxDepth=512) {
     try {
         unframed_ok_json(unframed_call(
             $fun, array(unframed_post_json_body($maxLength, $maxDepth))
-            ));
+            ), $iolist);
     } catch (Unframed $e) {
         unframed_error_json($e);
     }
