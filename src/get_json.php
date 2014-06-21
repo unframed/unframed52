@@ -1,7 +1,7 @@
 <?php 
 
 require_once(dirname(__FILE__).'/Unframed.php');
-require_once(dirname(__FILE__).'/properties.php');
+require_once(dirname(__FILE__).'/message.php');
 
 if (!function_exists('json_last_error')) {
     function json_last_error_msg() {
