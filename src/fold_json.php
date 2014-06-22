@@ -2,6 +2,8 @@
 
 require_once(dirname(__FILE__).'/cast_json.php');
 
+unframed_no_script(__FILE__);
+
 /**
  * Handle a POSTed JSON array's first message with $fun after a response is sent
  * and the rest of the messages are casted to the same script.

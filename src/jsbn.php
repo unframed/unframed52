@@ -2,6 +2,8 @@
 
 require_once(dirname(__FILE__).'/Unframed.php');
 
+unframed_no_script(__FILE__);
+
 /**
  * Generate $byteLength pseudo random bytes with Open SSL and return an hex
  * encoded string.

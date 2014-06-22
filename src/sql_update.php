@@ -2,6 +2,8 @@
 
 require_once(dirname(__FILE__).'/sql_transaction.php');
 
+unframed_no_script(__FILE__);
+
 function unframed_sql_update_set ($key) {
     return $key." = :".$key;
 }

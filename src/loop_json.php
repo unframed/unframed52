@@ -1,6 +1,8 @@
 <?php
 
-require_once(dirname(__FILE__).'/fold_json.php');
+require_once(dirname(__FILE__).'/cast_json.php');
+
+unframed_no_script(__FILE__);
 
 /**
  * Fail or receive a JSON cast, if the result of $fun($json) is not NULL, sleep 

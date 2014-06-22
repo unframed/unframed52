@@ -2,6 +2,8 @@
 
 require_once(dirname(__FILE__).'/Unframed.php');
 
+unframed_no_script(__FILE__);
+
 /**
  * Opens a database connection, sets its error mode to PDO::ERRMODE_EXCEPTION 
  * and return a PDO object.
@@ -28,6 +30,22 @@ function unframed_sql_open($dsn, $username=NULL, $password=NULL) {
  */
 function unframed_sqlite_open ($filename, $path='./') {
     return unframed_sql_open('sqlite:'.$path.$filename, NULL, NULL);
+}
+
+/**
+ * Open a MySQL database and return a PDO of fail.
+ *
+ * @param string $name of the MySQL database connection to open
+ * @param string $user
+ * @param string $password
+ * @param string $host, by default 'localhost'
+ *
+ * @return PDO connection
+ * @throws Unframed or PDOException
+ */
+function unframed_mysql_open ($name, $user, $password, $host='localhost') {
+    $dsn = 'mysql:host='.$host.';dbname='.$name;
+    return unframed_sql_open($dsn, $user, $password);
 }
 
 /**

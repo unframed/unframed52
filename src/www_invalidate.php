@@ -2,6 +2,8 @@
 
 require_once(dirname(__FILE__).'/Unframed.php');
 
+unframed_no_script(__FILE__);
+
 /*
 
 Resources are invalidated and templates applied in a convenient order,

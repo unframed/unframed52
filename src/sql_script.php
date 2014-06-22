@@ -2,6 +2,8 @@
 
 require_once(dirname(__FILE__).'/sql_transaction.php');
 
+unframed_no_script(__FILE__);
+
 /**
  * Opens a database with PDO, prepare all statements begins a transaction, execute all premared
  * statements with their parameters, commit the transaction and return all statements' results

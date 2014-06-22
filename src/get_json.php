@@ -1,6 +1,9 @@
 <?php 
 
 require_once(dirname(__FILE__).'/Unframed.php');
+
+unframed_no_script(__FILE__);
+
 require_once(dirname(__FILE__).'/message.php');
 
 if (!function_exists('json_last_error')) {

@@ -2,6 +2,8 @@
 
 require_once(dirname(__FILE__).'/Unframed.php');
 
+unframed_no_script(__FILE__);
+
 /**
  * A convenience to get typed properties from an associative array, a default or fail.
  */

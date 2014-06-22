@@ -2,6 +2,8 @@
 
 require_once(dirname(__FILE__).'/get_json.php');
 
+unframed_no_script(__FILE__);
+
 /**
  * Returns the JSON body of $maxLength bytes from a POST request, decoded as an array of 
  * $maxDepth and wrapped in an UnframedMessage or throw an exception.

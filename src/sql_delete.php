@@ -2,6 +2,8 @@
 
 require_once(dirname(__FILE__).'/sql_transaction.php');
 
+unframed_no_script(__FILE__);
+
 /**
  * For the given PDO connection, delete $object in $table where $column
  * equals $key.

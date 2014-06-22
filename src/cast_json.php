@@ -98,3 +98,35 @@ function unframed_cast_json ($fun, $maxLength=16384, $maxDepth=512) {
         unframed_call($fun, array($message));
     }
 }
+
+/**
+ * A test script for cast, with variable timeout and sleep times.
+ */
+if (unframed_is_server_script(__FILE__)) {
+    $method = $_SERVER['REQUEST_METHOD'];
+    if ($method == 'GET') { // Send cast message
+        function unframed_cast_test_get ($message) {
+            touch('unframed_cast_test');
+            $time = time();
+            unframed_cast(
+                unframed_cast_url(), 
+                $message->array, 
+                $message->asFloat('timeout', 0.05)
+                );
+            sleep($message->asFloat('sleep', 3) + 1);
+            return array(
+                'pass' => !file_exists('unframed_cast_test_get'),
+                'slept' => time() - $time
+                );
+        }
+        unframed_get_json ('unframed_cast_test');
+    } elseif ($method == 'POST') { // Receive cast message
+        function unframed_cast_test_post ($message) {
+            sleep($message->asFloat('sleep', 3) - $message->asFloat('timeout', 0.05));
+            unlink('unframed_cast_test');
+        }
+        unframed_cast_json('unframed_cast_test_post');
+    } else { // 405
+        unframed_json_error(new Unframed('Invalid Method', 405));
+    }
+}

@@ -2,6 +2,8 @@
 
 require_once(dirname(__FILE__).'/sql_transaction.php');
 
+unframed_no_script(__FILE__);
+
 /**
  * Select all distinct values for the $column in $table
  *
@@ -14,7 +16,7 @@ require_once(dirname(__FILE__).'/sql_transaction.php');
  * @throws PDOException
  * @throws Unframed
  */
-function unframed_sql_select_column($pdo, $table, $column, $constraint="") {
+function unframed_sql_select_column($pdo, $table, $column, $constraint="DISTINCT") {
     $st = $pdo->prepare("SELECT ".$constraint." ".$column." FROM ".$table);
     if ($st->execute(array())) {
         return $st->fetchAll(PDO::FETCH_COLUMN);
@@ -36,8 +38,10 @@ function unframed_sql_select_column($pdo, $table, $column, $constraint="") {
  * @throws PDOException
  * @throws Unframed
  */
-function unframed_sql_select_like($pdo, $table, $column, $like) {
-    $st = $pdo->prepare("SELECT ".$column." FROM ".$table." WHERE ".$column." = ?");
+function unframed_sql_select_like($pdo, $table, $column, $like, $constraint="DISTINCT") {
+    $st = $pdo->prepare(
+        "SELECT ".$constraint." ".$column." FROM ".$table." WHERE ".$column." like ?"
+        );
     $st->bindValue(1, $key);
     if ($st->execute()) {
         return $st->fetchAll(PDO::FETCH_COLUMN);

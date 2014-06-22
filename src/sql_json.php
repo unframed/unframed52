@@ -2,6 +2,8 @@
 
 require_once(dirname(__FILE__).'/sql_transaction.php');
 
+unframed_no_script(__FILE__);
+
 /**
  * Infer the SQL type of a column from a $value.
  *
@@ -9,8 +11,9 @@ require_once(dirname(__FILE__).'/sql_transaction.php');
  * types TEXT, REAL and INTEGER.
  *
  * @param any $value
+ * @param string $longtext the SQL type for text blobs, by default "TEXT" 
  */
-function unframed_sql_json_type ($value) {
+function unframed_sql_json_type ($value, $text="TEXT", $longtext="TEXT") {
     if (is_bool($value)) {
         // there is no SQL boolean data type, 2 bytes everywhere.
         return "SMALLINT DEFAULT 0";
@@ -21,11 +24,11 @@ function unframed_sql_json_type ($value) {
         // SQLite, MySQL & PostgreSQL.
         return "NUMERIC NOT NULL"; 
     } elseif (is_string($value)) {
-        // one size fit all strings.
-        return "TEXT NOT NULL"; 
+        // one size fit all strings (as long as it's 256 character long in MySQL)
+        return $text." NOT NULL"; 
     } elseif ($value==NULL || is_array($value) || is_object($value)) {
-        // NULL, arrays and objects are JSON in TEXT
-        return "TEXT"; 
+        // NULL, arrays and objects are JSON in (LONG)TEXT
+        return $longtext; 
     } else {
         throw new Unframed('Type Error - do not store '.gettype($value).' in SQL');
     }
@@ -34,39 +37,42 @@ function unframed_sql_json_type ($value) {
 /**
  * Create a table from a name and a JSON model.
  */
-function unframed_sql_json_table ($name, $model) {
+function unframed_sql_json_table ($prefix, $name, $model) {
     $columns = array($name."_json TEXT");
     if (!array_key_exists($name, $model)) {
-        array_push($columns, $name." INTEGER PRIMARY KEY AUTOINCREMENT");
+        array_push($columns, $name." INTEGER AUTOINCREMENT PRIMARY KEY");
     }
     foreach($model as $key => $value) {
         if (is_scalar($value)) {
-            array_push($columns, $key." ".unframed_sql_json_type($value));
+            array_push($columns, $key." ".unframed_sql_json_type($value, $longtext));
         }
     }
-    return ("CREATE TABLE ".$name." ("
-        .implode(', ', $columns).", PRIMARY KEY (".$name."))");
-}
-
-function unframed_sql_json_index ($name, $column) {
-    return ;
+    return (
+        "CREATE TABLE ".$prefix.$name." (\n    "
+            .implode(",\n    ", $columns)
+            .",\n    PRIMARY KEY (".$name.")\n    )"
+        );
 }
 
 /**
- * Create indexes for all scalar values, assert all column names are unique.
+ * For each named relation in $models for which a prefixed,  and indexes for all scalar values, assert all column names are unique.
  */
-function unframed_sql_json_schema ($models) {
+function unframed_sql_json_schema ($prefix, $models, $factory, $exist=NULL) {
     $indexes = array();
     $statements = array();
     foreach($models as $name => $model) {
-        array_push($statements, unframed_sql_json_table($name, $model));
-        foreach($model as $key => $value) {
-            if (is_scalar($value)) {
-                if (array_key_exists($key, $indexes)) {
-                    throw new Unframed('Name Error - '.$key.' is not unique');
+        if ($exist===NULL && !array_key_exists($prefix.$name, $exist)) {
+            array_push($statements, $factory($prefix, $name, $model));
+            foreach($models as $key => $value) {
+                if (is_scalar($value) && $value != NULL) {
+                    if (array_key_exists($key, $indexes)) {
+                        throw new Unframed('Name Error - column name '.$key.' is not unique');
+                    }
+                    $indexes[$key] = $name;
+                    array_push($statements, (
+                        "CREATE INDEX ".$prefix.$key." ON ".$prefix.$name."(".$key.")"
+                        ));
                 }
-                $indexes[$key] = $name;
-                array_push($statements, "CREATE INDEX ".$key." ON ".$name."(".$key.")");
             }
         }
     }
@@ -107,7 +113,8 @@ function unframed_sql_json_execute ($st, $values, $keys) {
         unframed_sql_json_bind($st, $values[$keys[$index]], $index);
     }
     if (!$st->execute()) {
-        throw new Unframed($st->errorInfo()[2]);
+        $info = $st->errorInfo();
+        throw new Unframed($info[2]);
     }
     return $st->rowCount();
 }
@@ -138,12 +145,16 @@ function unframed_sql_json_replace ($pdo, $table, $array) {
     return unframed_sql_json_insert ($pdo, $table, $array, 'REPLACE');
 }
 
-function unframed_sql_json ($pdo, $models, $path='./') {
-    unframed_sql_declare($pdo, unframed_sql_json_schema($models));
-    foreach($models as $table => $value) {
-        unframed_sql_transaction($pdo, 'unframed_sql_json_insert', array(
-            $pdo, $name, $value
-            ));
+function unframed_sql_json ($pdo, $prefix, $models, $factory, $exist=NULL) {
+    unframed_sql_declare($pdo, unframed_sql_json_schema(
+        $prefix, $models, $factory, $exist
+        ));
+    foreach($models as $name => $value) {
+        if ($exist===NULL && !array_key_exists($prefix.$name, search)) {
+            unframed_sql_transaction($pdo, 'unframed_sql_json_insert', array(
+                $pdo, $prefix.$name, $value
+                ));
+        }
     }
 }
 
@@ -158,11 +169,11 @@ function unframed_sql_json ($pdo, $models, $path='./') {
  * @return PDO connection
  * @throws Unframed or PDOException
  */
-function unframed_sqlite_json ($filename, $models, $path='./') {
+function unframed_sqlite_json ($filename, $prefix, $models, $path='./') {
     $is_old = file_exists($path.$filename);
     $pdo = unframed_sqlite_open($filename, $path);
     if (!$is_old) {
-        unframed_sql_json($pdo, $models);
+        unframed_sql_json($pdo, $prefix, $models, 'unframed_sql_json_table');
     }
     return $pdo;
 }
