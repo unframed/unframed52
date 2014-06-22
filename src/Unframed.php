@@ -101,15 +101,23 @@ function unframed_call ($fun, $array) {
  *
  * @return TRUE if $filename is the real path to SCRIP_FILENAME
  */
-function unframed_main ($filename) {
+function unframed_is_server_script ($filename) {
     return realpath($_SERVER['SCRIPT_FILENAME']) == $filename;
+}
+
+function unframed_no_script ($filename, $code=404) {
+    if (unframed_is_server_script($filename)) {
+        http_response_code($code);
+        flush();
+        die();
+    }
 }
 
 /**
  * If this __FILE__ is the script run, test basic requirements of Unframed52
  * and reply with 204 No Content on success or 500 Server Error on failure.
  */
-if (unframed_main(__FILE__)) {
+if (unframed_is_server_script(__FILE__)) {
     if (version_compare(PHP_VERSION, '5.2.0') >= 0 && ignore_user_abort() == TRUE) {
         http_response_code(204); // No content, test pass
     } else {
