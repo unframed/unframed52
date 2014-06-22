@@ -44,7 +44,7 @@ function unframed_sql_json_table ($prefix, $name, $model) {
     }
     foreach($model as $key => $value) {
         if (is_scalar($value)) {
-            array_push($columns, $key." ".unframed_sql_json_type($value, $longtext));
+            array_push($columns, $key." ".unframed_sql_json_type($value));
         }
     }
     return (
