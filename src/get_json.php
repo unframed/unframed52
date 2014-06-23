@@ -41,6 +41,15 @@ function unframed_get_query() {
     }
 }
 
+function unframed_http_json ($code, $body) {
+    http_response_code($code);
+    header("Content-length: ".strlen($body));
+    header('Content-Type: application/json');
+    header("Cache-Control: no-cache, no-store: 0");
+    echo $body;
+    flush();
+}
+
 /**
  * Set the appropriate HTTP response headers, let PHP set the HTTP response code and send a 
  * JSON response body. Note that if 'application/json' is not in the $_SERVER['HTTP_ACCEPT']
@@ -71,11 +80,7 @@ function unframed_ok_json($json, $options=0, $iolist=FALSE) {
             throw new Unframed(json_last_error_msg());
         }
     }
-    http_response_code(200);
-    header("Content-length: ".strlen($body));
-    header('Content-Type: application/json');
-    echo $body;
-    flush();
+    unframed_http_json(200, $body);
 }
 
 /**
@@ -88,11 +93,7 @@ function unframed_error_json($e) {
     } else {
         $body = json_encode($json);
     }
-    http_response_code($e->getCode());
-    header("Content-length: ".strlen($body));
-    header('Content-Type: application/json');
-    echo $body;
-    flush();
+    unframed_http_json($e->getCode(), $body);
 }
 
 /**
