@@ -14,21 +14,25 @@ unframed_no_script(__FILE__);
  * @param string $longtext the SQL type for text blobs, by default "TEXT" 
  */
 function unframed_sql_json_type ($value, $text="TEXT", $longtext="TEXT") {
-    if (is_bool($value)) {
-        // there is no SQL boolean data type, 2 bytes everywhere.
-        return "SMALLINT DEFAULT 0";
+    if ($value==NULL) {
+        // NULL is a nullable relation, usually an INTEGER row index.
+        return "INTEGER";
+    } elseif ($value==FALSE) {
+        return "SMALLINT NOT NULL DEFAULT 0";
+    } elseif ($value==TRUE) {
+        return "SMALLINT NOT NULL DEFAULT 1";
     } elseif (is_int($value)) {
-        // 8 bytes in MySQL & PostgreSQL, possibly more in SQLite.
-        return "BIGINT NOT NULL";
+        // 4 bytes in MySQL & PostgreSQL, possibly more in SQLite.
+        return "INTEGER NOT NULL";
     } elseif (is_numeric($value)) {
         // SQLite, MySQL & PostgreSQL.
         return "NUMERIC NOT NULL"; 
     } elseif (is_string($value)) {
         // one size fit all strings (as long as it's 256 character long in MySQL)
         return $text." NOT NULL"; 
-    } elseif ($value==NULL || is_array($value) || is_object($value)) {
-        // NULL, arrays and objects are JSON in (LONG)TEXT
-        return $longtext; 
+    } elseif (is_array($value) || is_object($value)) {
+        // arrays and objects are JSON in (LONG)TEXT
+        return $longtext;
     } else {
         throw new Unframed('Type Error - do not store '.gettype($value).' in SQL');
     }

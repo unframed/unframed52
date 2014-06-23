@@ -15,8 +15,8 @@ function unframed_mysql_json_table ($prefix, $name, $model) {
 		throw new Unframed("MySQL Error - column name too long: ".$name."_json");
 	}
     $columns = array($name."_json LONGTEXT");
-    if (!array_key_exists($name, $model)) { // 8 bytes integers, assumes 64bits 
-        array_push($columns, $name." BIGINT UNSIGNED NOT NULL AUTO_INCREMENT");
+    if (!array_key_exists($name, $model)) { // 4 bytes signed integers, 2 billions rows 
+        array_push($columns, $name." INTEGER NOT NULL AUTO_INCREMENT");
     }
     foreach($model as $key => $value) {
     	if (strlen($key) > 64) {
@@ -38,7 +38,7 @@ function unframed_mysql_json_table ($prefix, $name, $model) {
 
 /**
  * For an opened PDO connection to a MySQL database, declare a schema from the JSON $models
- * or fail.
+ * or fail, skip existing tables and indexes.
  *
  * @param PDO $pdo of an opened MySQL database connection
  * @param array $models to eventually map to an SQL schema
