@@ -139,6 +139,19 @@ class UnframedMessage {
         return $value;
     }
     /**
+     * Get a new UnframedMessage boxing the array value of $key 
+     * or a $default not NULL.
+     *
+     * @param string $key
+     * @param any $default
+     *
+     * @return UnframedMessage boxing $this->array[$key] or $default
+     * @throws Unframed exception with a name or type error
+     */
+    function getMessage($key, $default=NULL) {
+        return new UnframedMessage($this->getArray($key, $default));
+    }
+    /**
      * Get the value of $key in $this->array or a $default not NULL, 
      * as a string, or fail.
      * 
