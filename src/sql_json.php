@@ -61,13 +61,13 @@ function unframed_sql_json_table ($prefix, $name, $model) {
 /**
  * For each named relation in $models for which a prefixed,  and indexes for all scalar values, assert all column names are unique.
  */
-function unframed_sql_json_schema ($prefix, $models, $factory, $exist=NULL) {
+function unframed_sql_json_schema ($prefix, $models, $factory, $exist) {
     $indexes = array();
     $statements = array();
     foreach($models as $name => $model) {
-        if ($exist===NULL && !array_key_exists($prefix.$name, $exist)) {
+        if (!array_key_exists($prefix.$name, $exist)) {
             array_push($statements, $factory($prefix, $name, $model));
-            foreach($models as $key => $value) {
+            foreach($model as $key => $value) {
                 if (is_scalar($value) && $value != NULL) {
                     if (array_key_exists($key, $indexes)) {
                         throw new Unframed('Name Error - column name '.$key.' is not unique');
@@ -151,7 +151,7 @@ function unframed_sql_json_replace ($pdo, $table, $array) {
 
 function unframed_sql_json ($pdo, $prefix, $models, $factory, $exist=NULL) {
     unframed_sql_declare($pdo, unframed_sql_json_schema(
-        $prefix, $models, $factory, $exist
+        $prefix, $models, $factory, ($exist == NULL ? array() : $exist)
         ));
     foreach($models as $name => $value) {
         if ($exist===NULL && !array_key_exists($prefix.$name, search)) {
