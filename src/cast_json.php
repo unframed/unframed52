@@ -119,7 +119,7 @@ if (unframed_is_server_script(__FILE__)) {
                 'slept' => time() - $time
                 );
         }
-        unframed_get_json ('unframed_cast_test');
+        unframed_get_json ('unframed_cast_test_get');
     } elseif ($method == 'POST') { // Receive cast message
         function unframed_cast_test_post ($message) {
             sleep($message->asFloat('sleep', 3) - $message->asFloat('timeout', 0.05));
