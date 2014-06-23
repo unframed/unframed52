@@ -49,6 +49,8 @@ function unframed_mysql_json_table ($prefix, $name, $model) {
  */
 function unframed_mysql_json ($pdo, $prefix, $models) {
     $exist = unframed_sql_select_like($pdo, 'INFORMATION_SCHEMA.TABLES', 'TABLE_NAME', $prefix.'%');
-    unframed_sql_json($pdo, $prefix, $models, 'unframed_mysql_json_table', $exist);
+    unframed_sql_json(
+        $pdo, $prefix, $models, 'unframed_mysql_json_table', ((!$exist) ? array() : $exist)
+        );
     return $pdo;
 }
