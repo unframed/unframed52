@@ -140,6 +140,19 @@ class UnframedMessage {
     }
     /**
      * Get the value of $key in $this->array or a $default not NULL, 
+     * as a string, or fail.
+     * 
+     * @param string $key
+     * @param any $default
+     *
+     * @return string $this->array[$key] or $default
+     * @throws Unframed exception with a name error
+     */
+    function asString($key, $default=NULL) {
+        return strval($this->getDefault($key, $default));
+    }
+    /**
+     * Get the value of $key in $this->array or a $default not NULL, 
      * as an integer, or fail.
      * 
      * @param string $key
@@ -149,7 +162,7 @@ class UnframedMessage {
      * @throws Unframed exception with a name or type error
      */
     function asInt($key, $default=NULL) {
-        return intval($this->getString($key, strval($default)));
+        return intval($this->asString($key, $default));
     }
     /**
      * Get the value of $key in $this->array or a $default not NULL, 
@@ -162,7 +175,7 @@ class UnframedMessage {
      * @throws Unframed exception with a name or type error
      */
     function asFloat($key, $default=NULL) {
-        return floatval($this->getString($key, strval($default)));
+        return floatval($this->asString($key, $default));
     }
     /**
      * Get the value of $key in $this->array or a $default not NULL, 
@@ -175,7 +188,7 @@ class UnframedMessage {
      * @throws Unframed exception with a name or type error
      */
     function asBool($key, $default=NULL) {
-        return $this->getString($key, strval($default)) == 'true';
+        return $this->asString($key, $default) == 'true';
     }
 }
 
