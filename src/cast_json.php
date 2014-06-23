@@ -2,6 +2,8 @@
 
 require_once(dirname(__FILE__).'/post_json.php');
 
+unframed_no_script();
+
 // How to cast a JSON message to a relative URL in PHP 5.2
 
 /**
@@ -55,6 +57,7 @@ function unframed_cast_ok () {
     http_response_code(200);
     header("Connection: close");
     header("Content-length: 0");
+    header("Cache-Control: no-cache, no-store: 0");
     flush();
 }
 
@@ -102,28 +105,30 @@ function unframed_cast_json ($fun, $maxLength=16384, $maxDepth=512) {
 /**
  * A test script for cast, with variable timeout and sleep times.
  */
-if (unframed_is_server_script(__FILE__)) {
+function unframed_cast_json_test ($timeout=0.5, $sleep=3) {
+    define('UNFRAMED_CAST_TIMEOUT', $timeout);
+    define('UNFRAMED_CAST_SLEEP', $sleep);
     $method = $_SERVER['REQUEST_METHOD'];
     if ($method == 'GET') { // Send cast message
         function unframed_cast_test_get ($message) {
-            touch('unframed_cast_test');
+            $timeout = $message->asFloat('timeout', UNFRAMED_CAST_TIMEOUT);
+            $sleep = $message->asFloat('sleep', UNFRAMED_CAST_SLEEP);
+            touch('.unframed_cast_test');
             $time = time();
-            unframed_cast(
-                unframed_cast_url(), 
-                $message->array, 
-                $message->asFloat('timeout', 0.05)
-                );
-            sleep($message->asFloat('sleep', 3) + 1);
+            unframed_cast(unframed_cast_url(), $message->array, $timeout);
+            sleep($sleep + 1);
             return array(
-                'pass' => !file_exists('unframed_cast_test_get'),
+                'pass' => !file_exists('.unframed_cast_test_get'),
                 'slept' => time() - $time
                 );
         }
         unframed_get_json ('unframed_cast_test_get');
     } elseif ($method == 'POST') { // Receive cast message
         function unframed_cast_test_post ($message) {
-            sleep($message->asFloat('sleep', 3) - $message->asFloat('timeout', 0.05));
-            unlink('unframed_cast_test');
+            $sleep = $message->asFloat('sleep', UNFRAMED_CAST_SLEEP);
+            $timeout = $message->asFloat('timeout', UNFRAMED_CAST_TIMEOUT);
+            sleep($sleep - $timeout);
+            unlink('.unframed_cast_test');
         }
         unframed_cast_json('unframed_cast_test_post');
     } else { // 405
