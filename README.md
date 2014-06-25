@@ -95,7 +95,7 @@ function hello_world ($message) {
     # validate the API
     $who = $message->getString('who', 'World');
     # declare the JSON data model
-    $pdo = unframed_sqlite_json('hello_world.db', array(
+    $pdo = unframed_sqlite_json('hello_world.db', 'hello_', array(
         'who' => array(
             'who' => 'World' // primary
             )
@@ -104,7 +104,7 @@ function hello_world ($message) {
     unframed_sql_transaction(
         $pdo, 
         'unframed_sql_json_replace', 
-        array($pdo, 'who', $message->array)
+        array($pdo, 'hello_', 'who', $message->array)
         );
     # invalidate the REST ,-)
     return www_invalidate($message->array, array(
@@ -130,7 +130,7 @@ require 'unframed52/sql_select.php';
 
 function hello_worlds ($message) {
     return unframed_sql_select_column(
-        unframed_sqlite_open('hello_world.db'), 'who', 'who_json'
+        unframed_sqlite_open('hello_world.db'), 'hello_who', 'who_json'
         );
 }
 

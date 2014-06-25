@@ -136,21 +136,21 @@ function unframed_sql_json_execute ($st, $values, $keys) {
  *
  * @throws Unframed if the statement failed without throwing a PDO exception
  */
-function unframed_sql_json_insert ($pdo, $table, $array, $verb='INSERT') {
-    $values = unframed_sql_json_write($table, $array);
+function unframed_sql_json_insert ($pdo, $prefix, $name, $array, $verb='INSERT') {
+    $values = unframed_sql_json_write($name, $array);
     $keys = array_keys($values);
     $L = count($keys);
     $columns = implode(', ', array_map('unframed_sql_quote', $keys));
     $parameters = implode(', ', array_fill(0, $L, '?'));
     $sql = (
-        $verb." INTO ".unframed_sql_quote($table)
+        $verb." INTO ".unframed_sql_quote($prefix.$table)
         ." (".$columns.") VALUES (".$parameters.")"
         );
     return unframed_sql_json_execute($pdo->prepare($sql), $values, $keys);
 }
 
-function unframed_sql_json_replace ($pdo, $table, $array) {
-    return unframed_sql_json_insert ($pdo, $table, $array, 'REPLACE');
+function unframed_sql_json_replace ($pdo, $prefix, $name, $array) {
+    return unframed_sql_json_insert ($pdo, $prefix, $name, $array, 'REPLACE');
 }
 
 function unframed_sql_json ($pdo, $prefix, $models, $factory, $exist=NULL) {
