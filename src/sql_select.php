@@ -101,7 +101,7 @@ function unframed_sql_select_objects($pdo, $table, $offset=0, $limit=30) {
         "SELECT * FROM ".unframed_sql_quote($table)
         ." LIMIT ".strval($limit)." OFFSET ".strval($offset)
         );
-    $st = $pdo->prepare($statement);
+    $st = $pdo->prepare($sql);
     if ($st->execute()) {
         return $st->fetchAll(PDO::FETCH_ASSOC);
     }
