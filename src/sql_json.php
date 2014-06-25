@@ -115,7 +115,7 @@ function unframed_sql_json_bind ($st, $value, $index) {
 function unframed_sql_json_execute ($st, $values, $keys) {
     $L = count($keys);
     for ($index = 0; $index < $L; $index++) {
-        unframed_sql_json_bind($st, $values[$keys[$index]], $index);
+        unframed_sql_json_bind($st, $values[$keys[$index]], $index+1);
     }
     if (!$st->execute()) {
         $info = $st->errorInfo();
