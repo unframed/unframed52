@@ -50,7 +50,7 @@ function unframed_sqlite_open ($filename, $path='./') {
 function unframed_mysql_open ($name, $user, $password, $host='localhost') {
     $dsn = 'mysql:host='.$host.';dbname='.$name;
     $pdo = unframed_sql_open($dsn, $user, $password);
-    $pdo->query("SET GLOBAL SQL_MODE=ANSI_QUOTES");
+    $pdo->query("SET SQL_MODE=ANSI_QUOTES");
     return $pdo;
 }
 
