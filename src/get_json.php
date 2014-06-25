@@ -105,7 +105,7 @@ function unframed_error_json($e) {
  */
 function unframed_get_json($fun, $iolist=FALSE) {
     try {
-        unframed_ok_json(unframed_call($fun, array(unframed_get_query())), $iolist);
+        unframed_ok_json(unframed_call($fun, array(unframed_get_query())), 0, $iolist);
     } catch (Unframed $e) {
         unframed_error_json($e);
     }
