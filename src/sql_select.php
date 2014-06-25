@@ -84,6 +84,32 @@ function unframed_sql_select_object($pdo, $table, $column, $key) {
 }
 
 /**
+ * Return $limit rows of $table from $offset where or fail.
+ *
+ * @param PDO $pdo the database connection to use
+ * @param string $table the name of the table (or view) to select from
+ * @param int $offset to select from, 0 by default
+ * @param int $limit number of rows returned, 30 by default
+ *
+ * @return array of rows
+ *
+ * @throws PDOException
+ * @throws Unframed
+ */
+function unframed_sql_select_objects($pdo, $table, $offset=0, $limit=30) {
+    $sql = (
+        "SELECT * FROM ".unframed_sql_quote($table)
+        ." LIMIT ".strval($limit)." OFFSET ".strval($offset)
+        );
+    $st = $pdo->prepare($statement);
+    if ($st->execute()) {
+        return $st->fetchAll(PDO::FETCH_ASSOC);
+    }
+    $info = $st->errorInfo();
+    throw new Unframed($info[2]);
+}
+
+/**
  * Return an array of objects mapping values by column names or NULL
  * if the SQL statement's execution failed.
  *
@@ -91,7 +117,7 @@ function unframed_sql_select_object($pdo, $table, $column, $key) {
  * @param string $statement SQL select statement
  * @param array $parameters to use
  *
- * @return arrays of values by columns' names
+ * @return array of rows
  *
  * @throws PDOException
  * @throws Unframed
