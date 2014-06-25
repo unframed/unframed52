@@ -142,7 +142,10 @@ function unframed_sql_json_insert ($pdo, $table, $array, $verb='INSERT') {
     $L = count($keys);
     $columns = implode(', ', array_map('unframed_sql_quote', $keys));
     $parameters = implode(', ', array_fill(0, $L, '?'));
-    $sql = ($verb." INTO ".unframed_sql_quote($table)." (".$columns.") VALUES (".$parameters.")";
+    $sql = (
+        $verb." INTO ".unframed_sql_quote($table)
+        ." (".$columns.") VALUES (".$parameters.")"
+        );
     return unframed_sql_json_execute($pdo->prepare($sql), $values, $keys);
 }
 
