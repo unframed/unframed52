@@ -9,7 +9,7 @@ function unframed_sql_quote ($identifier) {
 }
 
 /**
- * Opens a database connection, sets its error mode to PDO::ERRMODE_EXCEPTION 
+ * Opens a database connection, sets its error mode to PDO::ERRMODE_EXCEPTION
  * and return a PDO object.
  *
  * @param string $dsn the distinguished name of the database
@@ -50,7 +50,6 @@ function unframed_sqlite_open ($filename, $path='./') {
 function unframed_mysql_open ($name, $user, $password, $host='localhost') {
     $dsn = 'mysql:host='.$host.';dbname='.$name;
     $pdo = unframed_sql_open($dsn, $user, $password);
-    // $pdo->query("SET SQL_MODE=ANSI_QUOTES");
     return $pdo;
 }
 
