@@ -91,7 +91,7 @@ function unframed_sql_json_schema ($prefix, $models, $factory, $exist) {
 function unframed_sql_json_write ($name, $array) {
     $row = array($name.'_json' => json_encode($array));
     foreach ($array as $key => $value) {
-        if (is_scalar($array)) {
+        if (is_scalar($value)) {
             $row[$key] = $value;
         }
     }
