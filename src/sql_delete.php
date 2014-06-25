@@ -18,7 +18,10 @@ unframed_no_script(__FILE__);
  * @throws PDOException
  */
 function unframed_sql_delete_key($pdo, $table, $column, $key) {
-    $sql = "DELETE FROM ".$table." WHERE ".$column." = ?";
+    $sql = (
+    	"DELETE FROM ".unframed_sql_quote($table)
+    	." WHERE ".unframed_sql_quote($column)." = ?"
+    	);
     $st = $pdo->prepare($sql);
     if ($st->bindParam(0, $key)) {
         if ($st->execute()) {

@@ -5,7 +5,7 @@ require_once(dirname(__FILE__).'/sql_transaction.php');
 unframed_no_script(__FILE__);
 
 function unframed_sql_update_set ($key) {
-    return $key." = :".$key;
+    return unframed_sql_quote($key)." = :".$key;
 }
 
 /**
@@ -25,7 +25,8 @@ function unframed_sql_update_set ($key) {
 function unframed_sql_update_key($pdo, $table, $column, $key, $values) {
     $updates = implode(', ', array_map('unframed_sql_update_set', array_keys($values)));
     $values['unframed_sql_update_key'] = $key;
-    $sql = "UPDATE ".$table." SET ".$updates." WHERE ".$column." = :unframed_sql_update_key";
+    $sql = "UPDATE ".unframed_sql_quote($table)
+        ." SET ".$updates." WHERE ".unframed_sql_quote($column)." = :unframed_sql_update_key";
     $st = $pdo->prepare($sql);
     if ($st->execute($values)) {
         return $st->rowCount();

@@ -4,6 +4,10 @@ require_once(dirname(__FILE__).'/Unframed.php');
 
 unframed_no_script(__FILE__);
 
+function unframed_sql_quote ($identifier) {
+    return '"'.$identifier.'"';
+}
+
 /**
  * Opens a database connection, sets its error mode to PDO::ERRMODE_EXCEPTION 
  * and return a PDO object.
@@ -45,7 +49,9 @@ function unframed_sqlite_open ($filename, $path='./') {
  */
 function unframed_mysql_open ($name, $user, $password, $host='localhost') {
     $dsn = 'mysql:host='.$host.';dbname='.$name;
-    return unframed_sql_open($dsn, $user, $password);
+    $pdo = unframed_sql_open($dsn, $user, $password);
+    $pdo->query("SET GLOBAL SQL_MODE=ANSI_QUOTES");
+    return $pdo;
 }
 
 /**

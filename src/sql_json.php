@@ -42,19 +42,19 @@ function unframed_sql_json_type ($value, $text="TEXT", $longtext="TEXT") {
  * Create a table from a name and a JSON model.
  */
 function unframed_sql_json_table ($prefix, $name, $model) {
-    $columns = array($name."_json TEXT");
+    $columns = array(unframed_sql_quote($name."_json")." TEXT");
     if (!array_key_exists($name, $model)) {
-        array_push($columns, $name." INTEGER AUTOINCREMENT PRIMARY KEY");
+        array_push($columns, unframed_sql_quote($name)." INTEGER AUTOINCREMENT PRIMARY KEY");
     }
     foreach($model as $key => $value) {
         if (is_scalar($value)) {
-            array_push($columns, $key." ".unframed_sql_json_type($value));
+            array_push($columns, unframed_sql_quote($key)." ".unframed_sql_json_type($value));
         }
     }
     return (
-        "CREATE TABLE ".$prefix.$name." (\n    "
+        "CREATE TABLE ".unframed_sql_quote($prefix.$name)." (\n    "
             .implode(",\n    ", $columns)
-            .",\n    PRIMARY KEY (".$name.")\n    )"
+            .",\n    PRIMARY KEY (".unframed_sql_quote($name).")\n    )"
         );
 }
 
@@ -74,7 +74,8 @@ function unframed_sql_json_schema ($prefix, $models, $factory, $exist) {
                     }
                     $indexes[$key] = $name;
                     array_push($statements, (
-                        "CREATE INDEX ".$prefix.$key." ON ".$prefix.$name."(".$key.")"
+                        "CREATE INDEX ".unframed_sql_quote($prefix.$key)
+                        ." ON ".unframed_sql_quote($prefix.$name)."(".unframed_sql_quote($key).")"
                         ));
                 }
             }
@@ -139,9 +140,9 @@ function unframed_sql_json_insert ($pdo, $table, $array, $verb='INSERT') {
     $values = unframed_sql_json_write($table, $array);
     $keys = array_keys($values);
     $L = count($keys);
-    $columns = implode(', ', $keys);
+    $columns = implode(', ', array_map('unframed_sql_quote', $keys));
     $parameters = implode(', ', array_fill(0, $L, '?'));
-    $sql = $verb." INTO ".$table." (".$columns.") VALUES (".$parameters.")";
+    $sql = ($verb." INTO ".unframed_sql_quote($table)." (".$columns.") VALUES (".$parameters.")";
     return unframed_sql_json_execute($pdo->prepare($sql), $values, $keys);
 }
 

@@ -17,7 +17,10 @@ unframed_no_script(__FILE__);
  * @throws Unframed
  */
 function unframed_sql_select_column($pdo, $table, $column, $constraint="DISTINCT") {
-    $st = $pdo->prepare("SELECT ".$constraint." ".$column." FROM ".$table);
+    $st = $pdo->prepare(
+        "SELECT ".$constraint." ".unframed_sql_quote($column)
+        ." FROM ".unframed_sql_quote($table)
+        );
     if ($st->execute(array())) {
         return $st->fetchAll(PDO::FETCH_COLUMN);
     }
@@ -40,7 +43,9 @@ function unframed_sql_select_column($pdo, $table, $column, $constraint="DISTINCT
  */
 function unframed_sql_select_like($pdo, $table, $column, $like, $constraint="DISTINCT") {
     $st = $pdo->prepare(
-        "SELECT ".$constraint." ".$column." FROM ".$table." WHERE ".$column." like ?"
+        "SELECT ".$constraint." ".unframed_sql_quote($column)
+        ." FROM ".unframed_sql_quote($table)
+        ." WHERE ".unframed_sql_quote($column)." like ?"
         );
     $st->bindValue(1, $key);
     if ($st->execute()) {
@@ -65,7 +70,10 @@ function unframed_sql_select_like($pdo, $table, $column, $like, $constraint="DIS
  * @throws Unframed
  */
 function unframed_sql_select_object($pdo, $table, $column, $key) {
-    $sql = "SELECT * FROM ".$table." WHERE ".$column." = ?";
+    $sql = (
+        "SELECT * FROM ".unframed_sql_quote($table)
+        ." WHERE ".unframed_sql_quote($column)." = ?"
+        );
     $st = $pdo->prepare($sql);
     $st->bindValue(1, $key);
     if ($st->execute()) {

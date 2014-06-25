@@ -14,24 +14,24 @@ function unframed_mysql_json_table ($prefix, $name, $model) {
 	if (strlen($name."_json") > 64) {
 		throw new Unframed("MySQL Error - column name too long: ".$name."_json");
 	}
-    $columns = array($name."_json LONGTEXT");
+    $columns = array(unframed_sql_quote($name."_json")." LONGTEXT");
     if (!array_key_exists($name, $model)) { // 4 bytes signed integers, 2 billions rows 
-        array_push($columns, $name." INTEGER NOT NULL AUTO_INCREMENT");
+        array_push($columns, unframed_sql_quote($name)." INTEGER NOT NULL AUTO_INCREMENT");
     }
     foreach($model as $key => $value) {
     	if (strlen($key) > 64) {
     		throw new Unframed('MySQL Error - column name too long: '.$key);
     	}
         if (is_scalar($value)) {
-            array_push($columns, $key." ".unframed_sql_json_type(
+            array_push($columns, unframed_sql_quote($key)." ".unframed_sql_json_type(
             	$value, "VARCHAR(256)", "LONGTEXT"
             	));
         }
     }
     return (
-        "CREATE TABLE ".$prefix.$name." (\n    "
+        "CREATE TABLE ".unframed_sql_quote($prefix.$name)." (\n    "
             .implode(",\n    ", $columns)
-            .",\n    PRIMARY KEY (".$name
+            .",\n    PRIMARY KEY (".unframed_sql_quote($name)
         	.")\n    ) ENGINE=MyISAM /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci*/"
         );
 }
