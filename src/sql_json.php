@@ -166,7 +166,8 @@ function unframed_sql_json_select ($pdo, $prefix, $name, $parameters,
         array_push($params, $value);
     }
     return unframed_sql_select_column (
-        $pdo, $prefix.$name, $name.'_json', implode(" AND ", $where), $params, $limit, $offset 
+        $pdo, $prefix.$name, $name.'_json', implode(" AND ", $where), 
+        $params, $offset, $limit 
         );
 }
 
