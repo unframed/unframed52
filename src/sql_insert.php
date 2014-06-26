@@ -28,11 +28,8 @@ function unframed_sql_insert_values($pdo, $table, $values, $verb='INSERT') {
     $parameters = implode(', ', array_map('unframed_sql_parameter', $keys));
     $sql = $verb." INTO ".$table." (".$columns.") VALUES (".$parameters.")";
     $st = $pdo->prepare($sql);
-    if ($st->execute($values)) {
-        return $st->rowCount();
-    }
-    $info = $st->errorInfo();
-    throw new Unframed($info[2]);
+    unframed_sql_execute($st, $values);
+    return $st->rowCount();
 }
 
 /**

@@ -23,11 +23,7 @@ function unframed_sql_delete_key($pdo, $table, $column, $key) {
     	." WHERE ".unframed_sql_quote($column)." = ?"
     	);
     $st = $pdo->prepare($sql);
-    if ($st->bindValue(1, $key)) {
-        if ($st->execute()) {
-            return $st->rowCount();
-        }
-    }
-    $info = $st->errorInfo();
-    throw new Unframed($info[2]);
+    $st->bindValue(1, $key);
+    unframed_sql_execute($st);
+    return $st->rowCount();
 }

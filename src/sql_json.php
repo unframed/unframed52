@@ -124,10 +124,7 @@ function unframed_sql_json_execute ($st, $values, $keys) {
     for ($index = 0; $index < $L; $index++) {
         unframed_sql_json_bind($st, $values[$keys[$index]], $index+1);
     }
-    if (!$st->execute()) {
-        $info = $st->errorInfo();
-        throw new Unframed($info[2]);
-    }
+    unframed_sql_execute($st);
     return $st->rowCount();
 }
 

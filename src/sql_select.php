@@ -5,19 +5,15 @@ require_once(dirname(__FILE__).'/sql_transaction.php');
 unframed_no_script(__FILE__);
 
 function unframed_sql_fetch($st, $parameters, $mode) {
-    if ($st->execute($parameters==NULL?array():$parameters)) {
+    if (unframed_sql_execute($st, $parameters)) {
         return $st->fetch($mode);
     }
-    $info = $st->errorInfo();
-    throw new Unframed($info[2]);
 }
 
 function unframed_sql_fetchAll($st, $parameters, $mode) {
-    if ($st->execute($parameters==NULL?array():$parameters)) {
+    if (unframed_sql_execute($st, $parameters)) {
         return $st->fetchAll($mode);
     }
-    $info = $st->errorInfo();
-    throw new Unframed($info[2]);
 }
 
 /**
@@ -45,7 +41,7 @@ function unframed_sql_select_column($pdo, $table, $column,
         "SELECT ".$constraint." ".unframed_sql_quote($column)
         ." FROM ".unframed_sql_quote($table)
         ." WHERE ".unframed_sql_quote($column)." IS NOT NULL"
-        .($where == NULL ? "" : " AND ".$where)
+        .($whereAndOrder == NULL ? "" : " AND ".$whereAndOrder)
         ." LIMIT ".strval($limit)." OFFSET ".strval($offset)
         );
     return unframed_sql_fetchAll($st, $params, PDO::FETCH_COLUMN);

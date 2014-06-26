@@ -85,9 +85,9 @@ function unframed_sql_transaction($pdo, $fun, $array) {
 }
 
 /**
- * Prepare, bind, execute and return a PDOStatement or throw 
- * an Unframed exception if the SQL statement's execution failed 
- * without PDOException.
+ * Execute a prepared statement eventually with parameters and return TRUE 
+ * on success or throw an Unframed exception if the SQL statement's execution 
+ * failed without PDOException.
  *
  * @param PDO $pdo the database connection to use
  * @param string $statement to execute
@@ -98,10 +98,14 @@ function unframed_sql_transaction($pdo, $fun, $array) {
  * @throws PDOException if $pdo error mode was set to exceptions
  * @throws Unframed if the execution failed without PDOException
  */
-function unframed_sql_execute($pdo, $sql, $parameters) {
-    $st = $pdo->prepare($sql);
-    if ($st->execute($parameters)) {
-        return $st;
+function unframed_sql_execute($st, $parameters=NULL) {
+    if ($parameters==NULL) {
+        $result = $st->execute($parameters);
+    } else {
+        $result = $st->execute();        
+    }
+    if ($result) {
+        return TRUE;
     }
     $info = $st->errorInfo();
     throw new Unframed($info[2]);
@@ -121,7 +125,7 @@ function unframed_sql_execute($pdo, $sql, $parameters) {
  */
 function unframed_sql_statement ($pdo, $statement, $parameters) {
     $st =  $pdo->prepare($statement);
-    if ($st->execute($parameters)) {
+    if (unframed_sql_execute($st, $parameters)) {
         if (preg_match('/^select/i', $statement)>0) {
             return array("fetchAll"=>$st->fetchAll());
         } elseif (preg_match('/^(insert|replace|update|delete)/i', $statement)>0) {
@@ -129,8 +133,6 @@ function unframed_sql_statement ($pdo, $statement, $parameters) {
         }
         return array();
     }
-    $info = $st->errorInfo();
-    throw new Unframed($info[2]);
 }
 
 /**
@@ -144,11 +146,7 @@ function unframed_sql_statement ($pdo, $statement, $parameters) {
  */
 function unframed_sql_statements ($pdo, $statements) {
     foreach ($statements as $sql) {
-        $st = $pdo->prepare($sql);
-        if (!$st->execute()) {
-            $info = $st->errorInfo();
-            throw new Unframed($info[2]);
-        }
+        unframed_sql_execute($pdo->prepare($sql));
     }
     return TRUE;
 }
