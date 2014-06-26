@@ -4,32 +4,55 @@ require_once(dirname(__FILE__).'/sql_transaction.php');
 
 unframed_no_script(__FILE__);
 
-/**
- * Select all distinct values for the $column in $table
- *
- * @param PDO $pdo the database connection to use
- * @param string $table the name of the table (or view) to select from
- * @param string $column the name of the column to select
- *
- * @return array of values
- *
- * @throws PDOException
- * @throws Unframed
- */
-function unframed_sql_select_column($pdo, $table, $column, $constraint="DISTINCT") {
-    $st = $pdo->prepare(
-        "SELECT ".$constraint." ".unframed_sql_quote($column)
-        ." FROM ".unframed_sql_quote($table)
-        );
-    if ($st->execute(array())) {
-        return $st->fetchAll(PDO::FETCH_COLUMN);
+function unframed_sql_fetch($st, $parameters, $mode) {
+    if ($st->execute($parameters==NULL?array():$parameters)) {
+        return $st->fetch($mode);
+    }
+    $info = $st->errorInfo();
+    throw new Unframed($info[2]);
+}
+
+function unframed_sql_fetchAll($st, $parameters, $mode) {
+    if ($st->execute($parameters==NULL?array():$parameters)) {
+        return $st->fetchAll($mode);
     }
     $info = $st->errorInfo();
     throw new Unframed($info[2]);
 }
 
 /**
- * Select all values for the $column in $table that match $like
+ * List all (distinct) non null values of $column in $table, eventually $whereAndOrder
+ * by some expression, limited to 30 rows from offset 0 by default.
+ *
+ * @param PDO $pdo the database connection to use
+ * @param string $table the name of the table (or view) to select from
+ * @param string $column the name of the column to select
+ *
+ * @param string $whereAndOrder SQL clause by default NULL
+ * @param array $params or NULL
+ * @param int $offset default to 0
+ * @param int $limit default to 30
+ * @param int $constraint default "DISTINCT"
+ *
+ * @return array of values
+ *
+ * @throws PDOException
+ * @throws Unframed
+ */
+function unframed_sql_select_column($pdo, $table, $column,
+    $whereAndOrder=NULL, $params=NULL, $offset=0, $limit=30, $constraint="DISTINCT") {
+    $st = $pdo->prepare(
+        "SELECT ".$constraint." ".unframed_sql_quote($column)
+        ." FROM ".unframed_sql_quote($table)
+        ." WHERE ".unframed_sql_quote($column)." IS NOT NULL"
+        .($where == NULL ? "" : " AND ".$where)
+        ." LIMIT ".strval($limit)." OFFSET ".strval($offset)
+        );
+    return unframed_sql_fetchAll($st, $params, PDO::FETCH_COLUMN);
+}
+
+/**
+ * Select all values for the $column in $table that is like $key.
  *
  * @param PDO $pdo the database connection to use
  * @param string $table the name of the table (or view) to select from
@@ -41,22 +64,20 @@ function unframed_sql_select_column($pdo, $table, $column, $constraint="DISTINCT
  * @throws PDOException
  * @throws Unframed
  */
-function unframed_sql_select_like($pdo, $table, $column, $like, $constraint="DISTINCT") {
+function unframed_sql_select_like($pdo, $table, $column, $key, 
+    $like=NULL, $offset=0, $limit=30, $constraint="DISTINCT") {
     $st = $pdo->prepare(
         "SELECT ".$constraint." ".unframed_sql_quote($column)
         ." FROM ".unframed_sql_quote($table)
-        ." WHERE ".unframed_sql_quote($column)." like ?"
+        ." WHERE ".unframed_sql_quote($like==NULL?$column:$like)." like ? "
+        ." LIMIT ".strval($limit)." OFFSET ".strval($offset)
         );
     $st->bindValue(1, $key);
-    if ($st->execute()) {
-        return $st->fetchAll(PDO::FETCH_COLUMN);
-    }
-    $info = $st->errorInfo();
-    throw new Unframed($info[2]);
+    return unframed_sql_fetchAll($st, NULL, PDO::FETCH_COLUMN);
 }
 
 /**
- * Return as an object the first row of $table where $column equals $key
+ * Return the first row of $table where $column equals $key
  * or NULL if the SQL statement's execution failed.
  *
  * @param PDO $pdo the database connection to use
@@ -69,18 +90,14 @@ function unframed_sql_select_like($pdo, $table, $column, $like, $constraint="DIS
  * @throws PDOException
  * @throws Unframed
  */
-function unframed_sql_select_object($pdo, $table, $column, $key) {
+function unframed_sql_select_row($pdo, $table, $column, $key) {
     $sql = (
         "SELECT * FROM ".unframed_sql_quote($table)
         ." WHERE ".unframed_sql_quote($column)." = ?"
         );
     $st = $pdo->prepare($sql);
     $st->bindValue(1, $key);
-    if ($st->execute()) {
-        return $st->fetch(PDO::FETCH_ASSOC);
-    }
-    $info = $st->errorInfo();
-    throw new Unframed($info[2]);
+    return unframed_sql_fetch($st, NULL, PDO::FETCH_ASSOC);
 }
 
 /**
@@ -88,6 +105,8 @@ function unframed_sql_select_object($pdo, $table, $column, $key) {
  *
  * @param PDO $pdo the database connection to use
  * @param string $table the name of the table (or view) to select from
+ * @param array $columns names of the columns to select, means '*' if NULL
+ * @param string $whereAndOrder SQL clause by default NULL
  * @param int $offset to select from, 0 by default
  * @param int $limit number of rows returned, 30 by default
  *
@@ -96,17 +115,18 @@ function unframed_sql_select_object($pdo, $table, $column, $key) {
  * @throws PDOException
  * @throws Unframed
  */
-function unframed_sql_select_objects($pdo, $table, $offset=0, $limit=30) {
+function unframed_sql_select_rows($pdo, $table,
+    $columns=NULL, $whereAndOrder="", $offset=0, $limit=30) {
     $sql = (
-        "SELECT * FROM ".unframed_sql_quote($table)
+        "SELECT ".($columns==NULL ? "*" : implode(
+            ",", array_map('unframed_sql_quote', $columns)
+            ))
+        ." FROM ".unframed_sql_quote($table)
+        .$whereAndOrder
         ." LIMIT ".strval($limit)." OFFSET ".strval($offset)
         );
     $st = $pdo->prepare($sql);
-    if ($st->execute()) {
-        return $st->fetchAll(PDO::FETCH_ASSOC);
-    }
-    $info = $st->errorInfo();
-    throw new Unframed($info[2]);
+    return unframed_sql_fetchAll($st, NULL, PDO::FETCH_ASSOC);
 }
 
 /**
@@ -124,9 +144,5 @@ function unframed_sql_select_objects($pdo, $table, $offset=0, $limit=30) {
  */
 function unframed_sql_select($pdo, $statement, $parameters) {
     $st = $pdo->prepare($statement);
-    if ($st->execute($parameters)) {
-        return $st->fetchAll(PDO::FETCH_ASSOC);
-    }
-    $info = $st->errorInfo();
-    throw new Unframed($info[2]);
+    return unframed_sql_fetchAll($st, $parameters, PDO::FETCH_ASSOC);
 }
