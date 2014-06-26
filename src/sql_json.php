@@ -59,7 +59,14 @@ function unframed_sql_json_table ($prefix, $name, $model) {
 }
 
 /**
- * For each named relation in $models for which a prefixed,  and indexes for all scalar values, assert all column names are unique.
+ * Return an SQL schema as an array of SQL strings for the given $models 
+ * using a $factory to create tables, a $prefix to fully qualify their names, 
+ * skipping tables that $exists.
+ *
+ * For each named relation in $models create a prefixed table if it does not exist yet
+ * with indexes for all its scalar values, assert all column names are unique and use 
+ * the data type found in the $models for columns.
+ *
  */
 function unframed_sql_json_schema ($prefix, $models, $factory, $exist) {
     $indexes = array();
@@ -151,6 +158,19 @@ function unframed_sql_json_insert ($pdo, $prefix, $name, $array, $verb='INSERT')
 
 function unframed_sql_json_replace ($pdo, $prefix, $name, $array) {
     return unframed_sql_json_insert ($pdo, $prefix, $name, $array, 'REPLACE');
+}
+
+function unframed_sql_json_select ($pdo, $prefix, $name, $parameters,
+    $limit=30, $offset=0) {
+    $where = array();
+    $params = array();
+    foreach ($parameters as $key => $value) {
+        array_push($where, unframed_sql_quote($key)." = ?");
+        array_push($params, $value);
+    }
+    return unframed_sql_select_column (
+        $pdo, $prefix.$name, $name.'_json', implode(" AND ", $where), $params, $limit, $offset 
+        );
 }
 
 function unframed_sql_json ($pdo, $prefix, $models, $factory, $exist=NULL) {
