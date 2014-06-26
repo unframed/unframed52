@@ -147,7 +147,7 @@ function unframed_sql_json_insert ($pdo, $prefix, $name, $array, $verb='INSERT')
     $columns = implode(', ', array_map('unframed_sql_quote', $keys));
     $parameters = implode(', ', array_fill(0, $L, '?'));
     $sql = (
-        $verb." INTO ".unframed_sql_quote($prefix.$table)
+        $verb." INTO ".unframed_sql_quote($prefix.$name)
         ." (".$columns.") VALUES (".$parameters.")"
         );
     return unframed_sql_json_execute($pdo->prepare($sql), $values, $keys);
