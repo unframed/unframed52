@@ -100,9 +100,9 @@ function unframed_sql_transaction($pdo, $fun, $array) {
  */
 function unframed_sql_execute($st, $parameters=NULL) {
     if ($parameters==NULL) {
-        $result = $st->execute($parameters);
+        $result = $st->execute();
     } else {
-        $result = $st->execute();        
+        $result = $st->execute($parameters);        
     }
     if ($result) {
         return TRUE;
