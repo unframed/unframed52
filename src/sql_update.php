@@ -28,9 +28,6 @@ function unframed_sql_update_key($pdo, $table, $column, $key, $values) {
     $sql = "UPDATE ".unframed_sql_quote($table)
         ." SET ".$updates." WHERE ".unframed_sql_quote($column)." = :unframed_sql_update_key";
     $st = $pdo->prepare($sql);
-    if ($st->execute($values)) {
-        return $st->rowCount();
-    }
-    $info = $st->errorInfo();
-    throw new Unframed($info[2]);
+    unframed_sql_execute($st, $values);
+    return $st->rowCount();
 }
