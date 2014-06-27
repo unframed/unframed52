@@ -158,7 +158,7 @@ function unframed_sql_json_replace ($pdo, $prefix, $name, $array) {
 }
 
 function unframed_sql_json_select ($pdo, $prefix, $name, $parameters,
-    $limit=30, $offset=0) {
+    $offset=0, $limit=30) {
     $where = array();
     $params = array();
     foreach ($parameters as $key => $value) {
