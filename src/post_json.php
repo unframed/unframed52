@@ -48,7 +48,7 @@ function unframed_post_json($fun, $iolist=FALSE, $maxLength=16384, $maxDepth=512
     try {
         unframed_ok_json(unframed_call(
             $fun, array(unframed_post_json_body($maxLength, $maxDepth))
-            ), $iolist);
+            ), 0, $iolist);
     } catch (Unframed $e) {
         unframed_error_json($e);
     }
