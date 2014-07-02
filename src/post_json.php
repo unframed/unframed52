@@ -24,7 +24,7 @@ function unframed_post_json_body($maxLength=16384, $maxDepth=512, $options=0) {
     if (defined('JSON_BIGINT_AS_STRING')) {
         $json = json_decode($body, TRUE, $maxDepth, $options|JSON_BIGINT_AS_STRING);
     } else {
-        $json = json_decode($body, TRUE, $maxDepth);
+        $json = json_decode($body, TRUE);
     }
     if ($json === NULL) {
         throw new Unframed(json_last_error_msg(), 400);
