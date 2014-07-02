@@ -101,6 +101,9 @@ function unframed_sql_transaction($pdo, $fun, $array) {
 function unframed_sql_execute($st, $parameters=NULL) {
     if ($parameters != NULL) {
         foreach ($parameters as $index => $value) {
+            if (is_int($index)) {
+                $index =+ 1;
+            }
             if ($value == NULL) {
                 $st->bindValue($index, $value, PDO::PARAM_NULL);
             } elseif (is_int($value)) {
