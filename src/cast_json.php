@@ -102,6 +102,28 @@ function unframed_cast_json ($fun, $maxLength=16384, $maxDepth=512) {
     }
 }
 
+// test
+
+function unframed_cast_test_get ($message) {
+    $timeout = $message->asFloat('timeout', UNFRAMED_CAST_TIMEOUT);
+    $sleep = $message->asFloat('sleep', UNFRAMED_CAST_SLEEP);
+    touch('.unframed_cast_test');
+    $time = time();
+    unframed_cast(unframed_cast_url(), $message->array, $timeout);
+    sleep($sleep + 1);
+    return array(
+        'pass' => !file_exists('.unframed_cast_test'),
+        'slept' => time() - $time
+        );
+}
+
+function unframed_cast_test_post ($message) {
+    $sleep = $message->asFloat('sleep', UNFRAMED_CAST_SLEEP);
+    $timeout = $message->asFloat('timeout', UNFRAMED_CAST_TIMEOUT);
+    sleep($sleep - $timeout);
+    unlink('.unframed_cast_test');
+}
+
 /**
  * A test script for cast, with variable timeout and sleep times.
  */
@@ -110,26 +132,8 @@ function unframed_cast_json_test ($timeout=0.5, $sleep=3) {
     define('UNFRAMED_CAST_SLEEP', $sleep);
     $method = $_SERVER['REQUEST_METHOD'];
     if ($method == 'GET') { // Send cast message
-        function unframed_cast_test_get ($message) {
-            $timeout = $message->asFloat('timeout', UNFRAMED_CAST_TIMEOUT);
-            $sleep = $message->asFloat('sleep', UNFRAMED_CAST_SLEEP);
-            touch('.unframed_cast_test');
-            $time = time();
-            unframed_cast(unframed_cast_url(), $message->array, $timeout);
-            sleep($sleep + 1);
-            return array(
-                'pass' => !file_exists('.unframed_cast_test_get'),
-                'slept' => time() - $time
-                );
-        }
         unframed_get_json ('unframed_cast_test_get');
     } elseif ($method == 'POST') { // Receive cast message
-        function unframed_cast_test_post ($message) {
-            $sleep = $message->asFloat('sleep', UNFRAMED_CAST_SLEEP);
-            $timeout = $message->asFloat('timeout', UNFRAMED_CAST_TIMEOUT);
-            sleep($sleep - $timeout);
-            unlink('.unframed_cast_test');
-        }
         unframed_cast_json('unframed_cast_test_post');
     } else { // 405
         unframed_json_error(new Unframed('Invalid Method', 405));
