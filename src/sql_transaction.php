@@ -99,12 +99,18 @@ function unframed_sql_transaction($pdo, $fun, $array) {
  * @throws Unframed if the execution failed without PDOException
  */
 function unframed_sql_execute($st, $parameters=NULL) {
-    if ($parameters==NULL) {
-        $result = $st->execute();
-    } else {
-        $result = $st->execute($parameters);        
+    if ($parameters != NULL) {
+        foreach ($parameters as $index => $value) {
+            if ($value == NULL) {
+                $st->bindValue($index, $value, PDO::PARAM_NULL);
+            } elseif (is_int($value)) {
+                $st->bindValue($index, $value, PDO::PARAM_INT);
+            } else {
+                $st->bindValue($index, $value);
+            }
+        }
     }
-    if ($result) {
+    if ($st->execute()) {
         return TRUE;
     }
     $info = $st->errorInfo();
