@@ -2,7 +2,7 @@
 
 require_once(dirname(__FILE__).'/post_json.php');
 
-unframed_no_script();
+unframed_no_script(__FILE__);
 
 // How to cast a JSON message to a relative URL in PHP 5.2
 
