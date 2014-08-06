@@ -122,7 +122,7 @@ function unframed_sql_execute($st, $parameters=NULL) {
 
 /**
  * Prepare and execute a parametrized SQL statement, then either: fetch and return
- * all SELECTed results; return the number of row INSERTed, UPDATEd or DELETEd;
+ * all SELECTed or SHOWed results; return the number of row INSERTed, UPDATEd or DELETEd;
  * or return an empty array for any other type of SQL statement.
  *
  * @param PDO $pdo connection to the SQL database
@@ -135,7 +135,7 @@ function unframed_sql_execute($st, $parameters=NULL) {
 function unframed_sql_statement ($pdo, $statement, $parameters) {
     $st =  $pdo->prepare($statement);
     if (unframed_sql_execute($st, $parameters)) {
-        if (preg_match('/^select/i', $statement)>0) {
+        if (preg_match('/^(select|show)/i', $statement)>0) {
             return array("fetchAll"=>$st->fetchAll());
         } elseif (preg_match('/^(insert|replace|update|delete)/i', $statement)>0) {
             return array("rowCount"=>$st->rowCount());
