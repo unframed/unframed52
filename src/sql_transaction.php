@@ -18,8 +18,10 @@ function unframed_sql_quote ($identifier) {
  *
  * @return PDO
  */
-function unframed_sql_open($dsn, $username=NULL, $password=NULL) {
-    $pdo = new PDO($dsn, $username, $password);
+function unframed_sql_open($dsn, $username=NULL, $password=NULL, $options=NULL) {
+    $pdo = new PDO($dsn, $username, $password, (
+        $options === NULL ? array() : $options
+        ));
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     return $pdo;
 }
@@ -33,7 +35,7 @@ function unframed_sql_open($dsn, $username=NULL, $password=NULL) {
  * @return PDO
  */
 function unframed_sqlite_open ($filename, $path='./') {
-    return unframed_sql_open('sqlite:'.$path.$filename, NULL, NULL);
+    return unframed_sql_open('sqlite:'.$path.$filename);
 }
 
 /**
@@ -49,7 +51,10 @@ function unframed_sqlite_open ($filename, $path='./') {
  */
 function unframed_mysql_open ($name, $user, $password, $host='localhost') {
     $dsn = 'mysql:host='.$host.';dbname='.$name;
-    $pdo = unframed_sql_open($dsn, $user, $password);
+    $pdo = unframed_sql_open(
+        $dsn, $user, $password, 
+        array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8")
+        );
     return $pdo;
 }
 
