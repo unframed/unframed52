@@ -13,10 +13,11 @@ unframed_no_script(__FILE__);
  * @param string $uri to complete, NULL by default
  */
 function unframed_cast_url($uri=NULL) {
+    $url = parse_url($uri==NULL?$_SERVER['REQUEST_URI']:$uri);
     return (
         "http".(!empty($_SERVER['HTTPS'])?"s":"")."://"
         .$_SERVER['SERVER_NAME'].':'.$_SERVER['SERVER_PORT']
-        .(parse_url($uri==NULL?$_SERVER['REQUEST_URI']:$uri)['path'])
+        .$url['path']
         );
 }
 
