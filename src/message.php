@@ -12,15 +12,21 @@ class UnframedMessage {
         $this->array = $array;
     }
     /**
-     * Get the values of the wrapped associative array as a list 
+     * Get the values of the wrapped associative array as a list
      */
     function asList () {
         return array_values($this->array);
     }
     /**
+     *
+     */
+    function has ($key) {
+        return array_key_exists($key, $this->array);
+    }
+    /**
      * Get the value of $key in $this->array if it is set, or a
      * $default not NULL, or fail.
-     * 
+     *
      * @param string $key
      * @param any $default
      *
@@ -40,7 +46,7 @@ class UnframedMessage {
      * Set the value of $key in $this->array to $default if it was not set yet,
      * return the (maybe updated) value of $this->array[$key] if it is a string
      * or fail.
-     * 
+     *
      * @param string $key
      * @param any $default
      *
@@ -54,9 +60,9 @@ class UnframedMessage {
         return $default;
     }
     /**
-     * Get the value of $key in $this->array or a $default not NULL, 
+     * Get the value of $key in $this->array or a $default not NULL,
      * assert that it is a string or fail.
-     * 
+     *
      * @param string $key
      * @param any $default
      *
@@ -71,9 +77,9 @@ class UnframedMessage {
         return $value;
     }
     /**
-     * Get the value of $key in $this->array or a $default not NULL, 
+     * Get the value of $key in $this->array or a $default not NULL,
      * assert that it is an integer or fail.
-     * 
+     *
      * @param string $key
      * @param any $default
      *
@@ -88,9 +94,9 @@ class UnframedMessage {
         return $value;
     }
     /**
-     * Get the value of $key in $this->array or a $default not NULL, 
+     * Get the value of $key in $this->array or a $default not NULL,
      * assert that it is a float or fail.
-     * 
+     *
      * @param string $key
      * @param any $default
      *
@@ -105,9 +111,9 @@ class UnframedMessage {
         return $value;
     }
     /**
-     * Get the value of $key in $this->array or a $default not NULL, 
+     * Get the value of $key in $this->array or a $default not NULL,
      * assert that it is an boolean or fail.
-     * 
+     *
      * @param string $key
      * @param any $default
      *
@@ -122,9 +128,9 @@ class UnframedMessage {
         return $value;
     }
     /**
-     * Get the value of $key in $this->array or a $default not NULL, 
+     * Get the value of $key in $this->array or a $default not NULL,
      * assert that it is an array or fail.
-     * 
+     *
      * @param string $key
      * @param any $default
      *
@@ -138,8 +144,14 @@ class UnframedMessage {
         }
         return $value;
     }
+    function getFloatArray($key, $default=NULL) {
+        return array_map('floatval', $this->getArray($key, $default));
+    }
+    function getIntArray($key, $default=NULL) {
+        return array_map('intval', $this->getArray($key, $default));
+    }
     /**
-     * Get a new UnframedMessage boxing the array value of $key 
+     * Get a new UnframedMessage boxing the array value of $key
      * or a $default not NULL.
      *
      * @param string $key
@@ -152,9 +164,9 @@ class UnframedMessage {
         return new UnframedMessage($this->getArray($key, $default));
     }
     /**
-     * Get the value of $key in $this->array or a $default not NULL, 
+     * Get the value of $key in $this->array or a $default not NULL,
      * as a string, or fail.
-     * 
+     *
      * @param string $key
      * @param any $default
      *
@@ -165,9 +177,9 @@ class UnframedMessage {
         return strval($this->getDefault($key, $default));
     }
     /**
-     * Get the value of $key in $this->array or a $default not NULL, 
+     * Get the value of $key in $this->array or a $default not NULL,
      * as an integer, or fail.
-     * 
+     *
      * @param string $key
      * @param any $default
      *
@@ -178,9 +190,9 @@ class UnframedMessage {
         return intval($this->asString($key, $default));
     }
     /**
-     * Get the value of $key in $this->array or a $default not NULL, 
+     * Get the value of $key in $this->array or a $default not NULL,
      * as a float, or fail.
-     * 
+     *
      * @param string $key
      * @param any $default
      *
@@ -191,9 +203,9 @@ class UnframedMessage {
         return floatval($this->asString($key, $default));
     }
     /**
-     * Get the value of $key in $this->array or a $default not NULL, 
+     * Get the value of $key in $this->array or a $default not NULL,
      * as a boolean, or fail.
-     * 
+     *
      * @param string $key
      * @param any $default
      *
