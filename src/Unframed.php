@@ -9,7 +9,7 @@
 /**
  * First, let the script run through after its input is closed.
  *
- * This ensure that network timeouts don't prevent longer running 
+ * This ensure that network timeouts don't prevent longer running
  * processes like static resources generation or interrupt
  * database transactions without a rollback.
  */
@@ -71,11 +71,11 @@ if (method_exists(new Exception(), 'getPrevious')) {
  * the name of an undefined function, if $fun is not callable and or if
  * $array is not an array.
  *
- * @param callable $fun the callable to apply 
+ * @param callable $fun the callable to apply
  * @param array $array the arguments to use
  *
  * @return any result of `call_user_func_array($fun, $array)`
- * @throws Unframed 
+ * @throws Unframed
  */
 function unframed_call ($fun, $array) {
     if (!is_array($array)) {
@@ -123,7 +123,46 @@ function unframed_no_script ($filename, $code=404) {
  */
 function unframed_test () {
     return (
-        version_compare(PHP_VERSION, '5.2.0') >= 0 && 
+        version_compare(PHP_VERSION, '5.2.0') >= 0 &&
         ignore_user_abort() == TRUE
         );
+}
+
+/**
+ * Recompile the PHP sources in $filename and invalidate the APC or OP cache.
+ */
+function unframed_compile ($filename) {
+    // test Zend's opcache_invalidate first
+    if (function_exists('opcache_invalidate')) {
+        return opcache_invalidate($filename);
+    } elseif (function_exists('apc_compile_file')) {
+        return apc_compile_file($filename);
+    }
+    return TRUE;
+}
+
+/**
+ * Update `.config.php` (and eventually recompile and cache).
+ */
+function unframed_configure ($concurrent, $cast_timeout, $loop_timeout) {
+    $filename = dirname(__FILE__).'/.config.php';
+    if (file_put_contents($filename, "<?php\n"
+        ."if (realpath(\$_SERVER['SCRIPT_FILENAME']) == __FILE__) {\n"
+        ."    header('x', TRUE, 404);\n"
+        ."    die();\n"
+        ."}\n"
+        ."define('UNFRAMED_CONCURRENT', ".$concurrent.");\n"
+        ."define('UNFRAMED_CAST_TIMEOUT', ".$cast_timeout.");\n"
+        ."define('UNFRAMED_LOOP_TIMEOUT', ".$loop_timeout.");\n"
+        ."?>") !== FALSE) {
+        return unframed_compile($filename);
+    }
+    return FALSE;
+}
+
+@include_once dirname(__FILE__).'/.config.php';
+if (!defined('UNFRAMED_CONCURRENT')) {
+    if (unframed_configure(4, 0.05, 29)) {
+        require dirname(__FILE__).'/.config.php';
+    }
 }
