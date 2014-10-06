@@ -141,11 +141,22 @@ function unframed_compile ($filename) {
     return TRUE;
 }
 
+function unframed_site_url() {
+    return (
+        "http".(!empty($_SERVER['HTTPS'])?"s":"")."://"
+        .$_SERVER['SERVER_NAME'].':'.$_SERVER['SERVER_PORT']
+        );
+}
+
+function unframed_configuration () {
+    return dirname(__FILE__).'/.config-'.md5(unframed_site_url()).'.php';
+}
+
 /**
  * Update `.config.php` (and eventually recompile and cache).
  */
 function unframed_configure ($concurrent, $cast_timeout, $loop_timeout) {
-    $filename = dirname(__FILE__).'/.config.php';
+    $filename = unframed_configuration();
     if (file_put_contents($filename, "<?php\n"
         ."if (realpath(\$_SERVER['SCRIPT_FILENAME']) == __FILE__) {\n"
         ."    header('x', TRUE, 404);\n"
@@ -160,9 +171,9 @@ function unframed_configure ($concurrent, $cast_timeout, $loop_timeout) {
     return FALSE;
 }
 
-@include_once dirname(__FILE__).'/.config.php';
+@include_once(unframed_configuration());
 if (!defined('UNFRAMED_CONCURRENT')) {
-    if (unframed_configure(4, 0.05, 29)) {
-        require dirname(__FILE__).'/.config.php';
+    if (unframed_configure(8, 0.005, 29)) {
+        require(unframed_configuration());
     }
 }
