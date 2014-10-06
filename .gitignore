@@ -3,3 +3,4 @@ deps/*
 priv/*
 test/sites/*/out
 test/sites/*/run
+src/.*
