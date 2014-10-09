@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 require_once(dirname(__FILE__).'/Unframed.php');
 
@@ -49,23 +49,23 @@ function unframed_sqlite_open ($filename, $path='./') {
  * @return PDO connection
  * @throws Unframed or PDOException
  */
-function unframed_mysql_open ($name, $user, $password, $host='localhost') {
-    $dsn = 'mysql:host='.$host.';dbname='.$name;
+function unframed_mysql_open ($name, $user, $password, $host='localhost', $port='3306') {
+    $dsn = 'mysql:host='.$host.';port='.$port.';dbname='.$name;
     $pdo = unframed_sql_open(
-        $dsn, $user, $password, 
+        $dsn, $user, $password,
         array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8")
         );
     return $pdo;
 }
 
 /**
- * Begin a transaction on $pdo, apply ($fun, $array), commit the transaction 
- * and return the result or catch any Exception, roll back the transaction and 
+ * Begin a transaction on $pdo, apply ($fun, $array), commit the transaction
+ * and return the result or catch any Exception, roll back the transaction and
  * throw an Unframed exception.
  *
  * @param PDO $pdo the database connection to use
  * @param function $fun to apply
- * @param array $array of arguments, default to array($pdo) 
+ * @param array $array of arguments, default to array($pdo)
  *
  * @return any $fun result
  *
@@ -90,8 +90,8 @@ function unframed_sql_transaction($pdo, $fun, $array) {
 }
 
 /**
- * Execute a prepared statement eventually with parameters and return TRUE 
- * on success or throw an Unframed exception if the SQL statement's execution 
+ * Execute a prepared statement eventually with parameters and return TRUE
+ * on success or throw an Unframed exception if the SQL statement's execution
  * failed without PDOException.
  *
  * @param PDO $pdo the database connection to use
