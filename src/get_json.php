@@ -91,7 +91,7 @@ function unframed_error_json($e) {
         'message' => $e->getMessage(),
         'file' => $e->getFile(),
         'line' => $e->getLine(),
-        'trace' => $e->getTraceAsString()
+        'trace' => explode("\n", $e->getTraceAsString())
         ));
     if (defined('JSON_PRETTY_PRINT')) {
         $body = json_encode($json, JSON_PRETTY_PRINT);
