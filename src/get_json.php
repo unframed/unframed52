@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 require_once(dirname(__FILE__).'/Unframed.php');
 
@@ -51,12 +51,12 @@ function unframed_http_json ($code, $body) {
 }
 
 /**
- * Set the appropriate HTTP response headers, let PHP set the HTTP response code and send a 
+ * Set the appropriate HTTP response headers, let PHP set the HTTP response code and send a
  * JSON response body. Note that if 'application/json' is not in the $_SERVER['HTTP_ACCEPT']
  * the JSON will be pretty printed.
  *
  * @param array $json the JSON response, may be an list of JSON encoded strings
- * @param array $iolist whether $json is a list of JSON strings, default to FALSE 
+ * @param array $iolist whether $json is a list of JSON strings, default to FALSE
  * @param int $options passed to json_encode, default to 0
  *
  * @return void
@@ -87,7 +87,12 @@ function unframed_ok_json($json, $options=0, $iolist=FALSE) {
  * ...
  */
 function unframed_error_json($e) {
-    $json = array('Error' => $e->getMessage());
+    $json = array('exception' => array(
+        'message' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine(),
+        'trace' => $e->getTraceAsString()
+        ));
     if (defined('JSON_PRETTY_PRINT')) {
         $body = json_encode($json, JSON_PRETTY_PRINT);
     } else {
@@ -101,7 +106,8 @@ function unframed_error_json($e) {
  * an array that will be sent as a JSON body in the HTTP response, catch any Unframed
  * exception, reply with an error code and a JSON error message.
  *
- * @param 
+ * @param $fun
+ * @param $iolist
  */
 function unframed_get_json($fun, $iolist=FALSE) {
     try {
