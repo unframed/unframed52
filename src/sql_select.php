@@ -36,12 +36,12 @@ function unframed_sql_fetchAll($st, $parameters, $mode) {
  * @throws Unframed
  */
 function unframed_sql_select_column($pdo, $table, $column,
-    $whereAndOrder=NULL, $params=NULL, $offset=0, $limit=30, $constraint="DISTINCT") {
+    $whereAndOrder="", $params=NULL, $offset=0, $limit=30) {
     $st = $pdo->prepare(
-        "SELECT ".$constraint." ".unframed_sql_quote($column)
+        "SELECT ".unframed_sql_quote($column)
         ." FROM ".unframed_sql_quote($table)
         ." WHERE ".unframed_sql_quote($column)." IS NOT NULL"
-        .($whereAndOrder == NULL ? "" : " AND ".$whereAndOrder)
+        .($whereAndOrder == "" ? "" : " AND ".$whereAndOrder)
         ." LIMIT ".strval($limit)." OFFSET ".strval($offset)
         );
     return unframed_sql_fetchAll($st, $params, PDO::FETCH_COLUMN);
@@ -60,16 +60,43 @@ function unframed_sql_select_column($pdo, $table, $column,
  * @throws PDOException
  * @throws Unframed
  */
-function unframed_sql_select_like($pdo, $table, $column, $key, 
-    $like=NULL, $offset=0, $limit=30, $constraint="DISTINCT") {
+function unframed_sql_select_like($pdo, $table, $column, $key,
+    $like=NULL, $offset=0, $limit=30) {
     $st = $pdo->prepare(
-        "SELECT ".$constraint." ".unframed_sql_quote($column)
+        "SELECT DISTINCT ".unframed_sql_quote($column)
         ." FROM ".unframed_sql_quote($table)
         ." WHERE ".unframed_sql_quote($like==NULL?$column:$like)." like ? "
         ." LIMIT ".strval($limit)." OFFSET ".strval($offset)
         );
     $st->bindValue(1, $key);
     return unframed_sql_fetchAll($st, NULL, PDO::FETCH_COLUMN);
+}
+
+/**
+ * Select all rows in $table with $column in $val.
+ *
+ * @param PDO $pdo the database connection to use
+ * @param string $table (or view) to select from
+ * @param string $column in wich to select values
+ * @param string $values to select
+ * @param string $offset to paginate from, defaults to 0
+ * @param string $limit of the page, defaults to 30
+ *
+ * @return array of arrays
+ *
+ * @throws PDOException
+ * @throws Unframed
+ */
+function unframed_sql_select_in($pdo, $table, $column, $values,
+    $offset=0, $limit=30) {
+    $st = $pdo->prepare(
+        "SELECT * FROM ".unframed_sql_quote($table)
+        ." WHERE ".unframed_sql_quote($column)." IN ("
+            .implode(', ', array_fill(0, count($values), '?'))
+            .")"
+        ." LIMIT ".strval($limit)." OFFSET ".strval($offset)
+        );
+    return unframed_sql_fetchAll($st, $values, PDO::FETCH_ASSOC);
 }
 
 /**

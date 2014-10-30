@@ -13,7 +13,7 @@ require_once(dirname(__FILE__).'/sql_select.php');
  * types TEXT, REAL and INTEGER.
  *
  * @param any $value
- * @param string $longtext the SQL type for text blobs, by default "TEXT" 
+ * @param string $longtext the SQL type for text blobs, by default "TEXT"
  */
 function unframed_sql_json_type ($value, $text="TEXT", $longtext="TEXT") {
     if ($value==NULL) {
@@ -28,10 +28,10 @@ function unframed_sql_json_type ($value, $text="TEXT", $longtext="TEXT") {
         return "INTEGER NOT NULL";
     } elseif (is_numeric($value)) {
         // SQLite, MySQL & PostgreSQL.
-        return "NUMERIC NOT NULL"; 
+        return "NUMERIC NOT NULL";
     } elseif (is_string($value)) {
         // one size fit all strings (as long as it's 256 character long in MySQL)
-        return $text." NOT NULL"; 
+        return $text." NOT NULL";
     } elseif (is_array($value) || is_object($value)) {
         // arrays and objects are JSON in (LONG)TEXT
         return $longtext;
@@ -61,12 +61,12 @@ function unframed_sql_json_table ($prefix, $name, $model) {
 }
 
 /**
- * Return an SQL schema as an array of SQL strings for the given $models 
- * using a $factory to create tables, a $prefix to fully qualify their names, 
+ * Return an SQL schema as an array of SQL strings for the given $models
+ * using a $factory to create tables, a $prefix to fully qualify their names,
  * skipping tables that $exists.
  *
  * For each named relation in $models create a prefixed table if it does not exist yet
- * with indexes for all its scalar values, assert all column names are unique and use 
+ * with indexes for all its scalar values, assert all column names are unique and use
  * the data type found in the $models for columns.
  *
  */
@@ -94,7 +94,7 @@ function unframed_sql_json_schema ($prefix, $models, $factory, $exist) {
 }
 
 /**
- * Map the scalar values in an associative $array into 
+ * Map the scalar values in an associative $array into
  * a result row, plus its JSON encoded string as $name.'_json'.
  */
 function unframed_sql_json_write ($name, $array) {
@@ -131,7 +131,35 @@ function unframed_sql_json_execute ($st, $values, $keys) {
 }
 
 /**
- * Prepare an SQL statement to insert (or replace) $values in $table, encode 
+ * Prepare an SQL statement to insert (or replace) many $arrays in table $name,
+ * encode non-scalars parameters as JSON, execute the statements or fail.
+ *
+ * @param PDO $pdo the database connection
+ * @param string $name of the table to delete from
+ * @param string $values to insert or replace, indexed by column names
+ *
+ * @return the number of rows affected, 1 on success.
+ *
+ * @throws Unframed if the statement failed without throwing a PDO exception
+ */
+function unframed_sql_json_insert_all ($pdo, $prefix, $name, $arrays) {
+    $values = unframed_sql_json_write($name, $array);
+    $keys = array_keys($values);
+    $columns = implode(', ', array_map('unframed_sql_quote', $keys));
+    $parameters = implode('), (', array_fill(0, count($arrays), implode(
+        ', ', array_fill(0, count($keys), '?')
+        )));
+    $sql = (
+        "INSERT INTO ".unframed_sql_quote($prefix.$name)
+        ." (".$columns.") VALUES ((".$parameters."))"
+        );
+    $st = $pdo->prepare($sql);
+    unframed_sql_execute($st);
+    return $st->rowCount();
+}
+
+/**
+ * Prepare an SQL statement to insert (or replace) $values in $table, encode
  * non-scalars parameters as JSON, execute the statements or fail.
  *
  * @param PDO $pdo the database connection
@@ -160,16 +188,40 @@ function unframed_sql_json_replace ($pdo, $prefix, $name, $array) {
 }
 
 function unframed_sql_json_select ($pdo, $prefix, $name, $parameters,
-    $offset=0, $limit=30) {
+    $offset=0, $limit=30, $orderBy=NULL) {
     $where = array();
     $params = array();
-    foreach ($parameters as $key => $value) {
-        array_push($where, unframed_sql_quote($key)." = ?");
+    foreach ($parameters as $column => $value) {
+        array_push($where, unframed_sql_quote($column)." = ?");
         array_push($params, $value);
     }
     return unframed_sql_select_column (
-        $pdo, $prefix.$name, $name.'_json', implode(" AND ", $where), 
-        $params, $offset, $limit 
+        $pdo, $prefix.$name, $name.'_json',
+        implode(" AND ", $where).(
+            $orderBy === NULL ? "" : " ORDER BY ".implode(", ", $orderBy)
+            ),
+        $params, $offset, $limit
+        );
+}
+
+function unframed_sql_json_filterLike ($pdo, $prefix, $name, $filter,
+    $like=NULL, $offset=0, $limit=30, $orderBy=NULL) {
+    $where = array();
+    $params = array();
+    foreach ($filter as $column => $value) {
+        if ($like === NULL || $like != $column) {
+            array_push($where, unframed_sql_quote($column)." = ?");
+        } else {
+            array_push($where, unframed_sql_quote($like)." like ?");
+        }
+        array_push($params, $value);
+    }
+    return unframed_sql_select_column (
+        $pdo, $prefix.$name, $name.'_json',
+        implode(" AND ", $where).(
+            $orderBy === NULL ? "" : " ORDER BY ".implode(", ", $orderBy)
+            ),
+        $params, $offset, $limit, $orderBy
         );
 }
 
