@@ -4,6 +4,14 @@ require_once(dirname(__FILE__).'/Unframed.php');
 
 unframed_no_script(__FILE__);
 
+function unframed_is_list ($array) {
+    return (0 === count(array_diff(range(0, $count-1), array_keys($array))));
+}
+
+function unframed_is_map ($array) {
+    return (count($array) === count(array_filter(array_keys($array), 'is_string')));
+}
+
 /**
  * A convenience to get typed properties from an associative array, a default or fail.
  */
@@ -144,11 +152,43 @@ class UnframedMessage {
         }
         return $value;
     }
-    function getFloatArray($key, $default=NULL) {
-        return array_map('floatval', $this->getArray($key, $default));
+    /**
+     * Get the value of $key or a $default not NULL, assert that it is an list or fail.
+     *
+     * @param string $key
+     * @param any $default
+     *
+     * @return array $this->array[$key] or $default
+     * @throws Unframed exception with a name or type error
+     */
+    function getList($key, $default=NULL) {
+        $value = $this->getDefault($key, $default);
+        if (!unframed_is_list($value)) {
+            throw new Unframed('Type Error - '.$key.' must be a List');
+        }
+        return $value;
     }
-    function getIntArray($key, $default=NULL) {
-        return array_map('intval', $this->getArray($key, $default));
+    function getListAsFloat($key, $default=NULL) {
+        return array_map('floatval', $this->getList($key, $default));
+    }
+    function getListAsInt($key, $default=NULL) {
+        return array_map('intval', $this->getList($key, $default));
+    }
+    /**
+     * Get the value of $key or a $default not NULL, assert that it is a map or fail.
+     *
+     * @param string $key
+     * @param any $default
+     *
+     * @return array $this->array[$key] or $default
+     * @throws Unframed exception with a name or type error
+     */
+    function getMap($key, $default=NULL) {
+        $value = $this->getDefault($key, $default);
+        if (!unframed_is_map($value)) {
+            throw new Unframed('Type Error - '.$key.' must be a Map');
+        }
+        return $value;
     }
     /**
      * Get a new UnframedMessage boxing the array value of $key
@@ -161,7 +201,7 @@ class UnframedMessage {
      * @throws Unframed exception with a name or type error
      */
     function getMessage($key, $default=NULL) {
-        return new UnframedMessage($this->getArray($key, $default));
+        return new UnframedMessage($this->getMap($key, $default));
     }
     /**
      * Get the value of $key in $this->array or a $default not NULL,
