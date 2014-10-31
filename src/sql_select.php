@@ -23,19 +23,33 @@ function unframed_sql_orderBy($orders) {
     return " ORDER BY ".implode(", ", array_map('unframed_sql_quote', $orders));
 }
 
+function unframed_sql_filterLike($filter, $like=NULL) {
+    $where = array();
+    $params = array();
+    foreach ($filter as $column => $value) {
+        if ($column === $like) {
+            array_push($where, unframed_sql_quote($like)." like ?");
+        } else {
+            array_push($where, unframed_sql_quote($column)." = ?");
+        }
+        array_push($params, $value);
+    }
+    return array(implode(" AND ", $where), $params);
+}
+
 /**
- * List all (distinct) non null values of $column in $table, eventually $whereAndOrder
- * by some expression, limited to 30 rows from offset 0 by default.
+ * List all non null values of $column in $table, eventually with a $where
+ * clause, limited to 30 rows from offset 0 by default.
  *
  * @param PDO $pdo the database connection to use
  * @param string $table the name of the table (or view) to select from
  * @param string $column the name of the column to select
  *
- * @param string $whereAndOrder SQL clause by default NULL
+ * @param string $where SQL clause by default NULL
  * @param array $params or NULL
  * @param int $offset default to 0
  * @param int $limit default to 30
- * @param int $constraint default "DISTINCT"
+ * @param array $orderBy
  *
  * @return array of values
  *
@@ -55,8 +69,18 @@ function unframed_sql_select_column($pdo, $table, $column,
     return unframed_sql_fetchAll($st, $params, PDO::FETCH_COLUMN);
 }
 
+function unframed_sql_select_count($pdo, $table, $column,
+    $where=NULL, $params=NULL) {
+    $st = $pdo->prepare(
+        "SELECT COUNT(*) FROM ".unframed_sql_quote($table)
+        ." WHERE ".unframed_sql_quote($column)." IS NOT NULL"
+        .(($where === NULL) || ($where == "") ? "" : " AND ".$where)
+        );
+    return intval(unframed_sql_fetch($st, $params, PDO::FETCH_COLUMN));
+}
+
 /**
- * Select all values for the $column in $table that is like $key.
+ * Select all distinct values for the $column in $table that is like $key.
  *
  * @param PDO $pdo the database connection to use
  * @param string $table the name of the table (or view) to select from
@@ -90,6 +114,7 @@ function unframed_sql_select_like($pdo, $table, $column, $key,
  * @param string $values to select
  * @param string $offset to paginate from, defaults to 0
  * @param string $limit of the page, defaults to 30
+ * @param array $orderBy
  *
  * @return array of arrays
  *
@@ -142,6 +167,7 @@ function unframed_sql_select_row($pdo, $table, $column, $key) {
  * @param string $whereAndOrder SQL clause by default NULL
  * @param int $offset to select from, 0 by default
  * @param int $limit number of rows returned, 30 by default
+ * @param array $orderBy
  *
  * @return array of rows
  *

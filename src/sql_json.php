@@ -203,19 +203,19 @@ function unframed_sql_json_select ($pdo, $prefix, $name, $filter,
 
 function unframed_sql_json_filterLike ($pdo, $prefix, $name, $filter,
     $like=NULL, $offset=0, $limit=30, $orderBy=NULL) {
-    $where = array();
-    $params = array();
-    foreach ($filter as $column => $value) {
-        if ($column === $like) {
-            array_push($where, unframed_sql_quote($like)." like ?");
-        } else {
-            array_push($where, unframed_sql_quote($column)." = ?");
-        }
-        array_push($params, $value);
-    }
+    list($where, $params) = unframed_sql_filterLike($filter, $like);
     return unframed_sql_select_column (
         $pdo, $prefix.$name, $name.'_json',
         implode(" AND ", $where), $params, $offset, $limit, $orderBy
+        );
+}
+
+function unframed_sql_json_filterLikeCount ($pdo, $prefix, $name, $filter,
+    $like=NULL) {
+    list($where, $params) = unframed_sql_filterLike($filter, $like);
+    return unframed_sql_select_count (
+        $pdo, $prefix.$name, $name.'_json',
+        implode(" AND ", $where), $params
         );
 }
 
