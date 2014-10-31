@@ -16,6 +16,13 @@ function unframed_sql_fetchAll($st, $parameters, $mode) {
     }
 }
 
+function unframed_sql_orderBy($orders) {
+    if ($orders === NULL) {
+        return "";
+    }
+    return " ORDER BY ".implode(", ", array_map('unframed_sql_quote', $orders));
+}
+
 /**
  * List all (distinct) non null values of $column in $table, eventually $whereAndOrder
  * by some expression, limited to 30 rows from offset 0 by default.
@@ -36,12 +43,13 @@ function unframed_sql_fetchAll($st, $parameters, $mode) {
  * @throws Unframed
  */
 function unframed_sql_select_column($pdo, $table, $column,
-    $whereAndOrder="", $params=NULL, $offset=0, $limit=30) {
+    $where=NULL, $params=NULL, $offset=0, $limit=30, $orderBy=NULL) {
     $st = $pdo->prepare(
         "SELECT ".unframed_sql_quote($column)
         ." FROM ".unframed_sql_quote($table)
         ." WHERE ".unframed_sql_quote($column)." IS NOT NULL"
-        .($whereAndOrder == "" ? "" : " AND ".$whereAndOrder)
+        .(($where === NULL) || ($where == "") ? "" : " AND ".$where)
+        .unframed_sql_orderBy($orderBy)
         ." LIMIT ".strval($limit)." OFFSET ".strval($offset)
         );
     return unframed_sql_fetchAll($st, $params, PDO::FETCH_COLUMN);
@@ -61,11 +69,12 @@ function unframed_sql_select_column($pdo, $table, $column,
  * @throws Unframed
  */
 function unframed_sql_select_like($pdo, $table, $column, $key,
-    $like=NULL, $offset=0, $limit=30) {
+    $like=NULL, $offset=0, $limit=30, $orderBy=NULL) {
     $st = $pdo->prepare(
         "SELECT DISTINCT ".unframed_sql_quote($column)
         ." FROM ".unframed_sql_quote($table)
         ." WHERE ".unframed_sql_quote($like==NULL?$column:$like)." like ? "
+        .unframed_sql_orderBy($orderBy)
         ." LIMIT ".strval($limit)." OFFSET ".strval($offset)
         );
     $st->bindValue(1, $key);
@@ -88,12 +97,13 @@ function unframed_sql_select_like($pdo, $table, $column, $key,
  * @throws Unframed
  */
 function unframed_sql_select_in($pdo, $table, $column, $values,
-    $offset=0, $limit=30) {
+    $offset=0, $limit=30, $orderBy=NULL) {
     $st = $pdo->prepare(
         "SELECT * FROM ".unframed_sql_quote($table)
         ." WHERE ".unframed_sql_quote($column)." IN ("
             .implode(', ', array_fill(0, count($values), '?'))
             .")"
+        .unframed_sql_orderBy($orderBy)
         ." LIMIT ".strval($limit)." OFFSET ".strval($offset)
         );
     return unframed_sql_fetchAll($st, $values, PDO::FETCH_ASSOC);
@@ -139,13 +149,14 @@ function unframed_sql_select_row($pdo, $table, $column, $key) {
  * @throws Unframed
  */
 function unframed_sql_select_rows($pdo, $table,
-    $columns=NULL, $whereAndOrder="", $offset=0, $limit=30) {
+    $columns=NULL, $where="", $offset=0, $limit=30, $orderBy=NULL) {
     $sql = (
         "SELECT ".($columns==NULL ? "*" : implode(
             ",", array_map('unframed_sql_quote', $columns)
             ))
         ." FROM ".unframed_sql_quote($table)
-        .$whereAndOrder
+        .$where
+        .unframed_sql_orderBy($orderBy)
         ." LIMIT ".strval($limit)." OFFSET ".strval($offset)
         );
     $st = $pdo->prepare($sql);

@@ -187,20 +187,17 @@ function unframed_sql_json_replace ($pdo, $prefix, $name, $array) {
     return unframed_sql_json_insert ($pdo, $prefix, $name, $array, 'REPLACE');
 }
 
-function unframed_sql_json_select ($pdo, $prefix, $name, $parameters,
+function unframed_sql_json_select ($pdo, $prefix, $name, $filter,
     $offset=0, $limit=30, $orderBy=NULL) {
     $where = array();
     $params = array();
-    foreach ($parameters as $column => $value) {
+    foreach ($filter as $column => $value) {
         array_push($where, unframed_sql_quote($column)." = ?");
         array_push($params, $value);
     }
     return unframed_sql_select_column (
         $pdo, $prefix.$name, $name.'_json',
-        implode(" AND ", $where).(
-            $orderBy === NULL ? "" : " ORDER BY ".implode(", ", $orderBy)
-            ),
-        $params, $offset, $limit
+        implode(" AND ", $where), $params, $offset, $limit, $orderBy
         );
 }
 
@@ -209,19 +206,16 @@ function unframed_sql_json_filterLike ($pdo, $prefix, $name, $filter,
     $where = array();
     $params = array();
     foreach ($filter as $column => $value) {
-        if ($like === NULL || $like != $column) {
-            array_push($where, unframed_sql_quote($column)." = ?");
-        } else {
+        if ($column === $like) {
             array_push($where, unframed_sql_quote($like)." like ?");
+        } else {
+            array_push($where, unframed_sql_quote($column)." = ?");
         }
         array_push($params, $value);
     }
     return unframed_sql_select_column (
         $pdo, $prefix.$name, $name.'_json',
-        implode(" AND ", $where).(
-            $orderBy === NULL ? "" : " ORDER BY ".implode(", ", $orderBy)
-            ),
-        $params, $offset, $limit, $orderBy
+        implode(" AND ", $where), $params, $offset, $limit, $orderBy
         );
 }
 
