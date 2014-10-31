@@ -5,6 +5,13 @@ require_once(dirname(__FILE__).'/Unframed.php');
 unframed_no_script(__FILE__);
 
 function unframed_sql_quote ($identifier) {
+    if (strlen($identifier) > 64) {
+        // MySQL identifiers are limited to 64 characters ...
+        throw new Unframed("Error - too long SQL identifier: ".$identifier);
+    } elseif (strpos($identifier, "`")) {
+        // possible SQL injection !
+        throw new Unframed("Error - Quote found in SQL identifier: ".$identifier);
+    }
     return "`".$identifier."`";
 }
 
