@@ -206,7 +206,7 @@ function unframed_sql_json_filterLike ($pdo, $prefix, $name, $filter,
     list($where, $params) = unframed_sql_filterLike($filter, $like);
     return unframed_sql_select_column (
         $pdo, $prefix.$name, $name.'_json',
-        implode(" AND ", $where), $params, $offset, $limit, $orderBy
+        $where, $params, $offset, $limit, $orderBy
         );
 }
 
@@ -214,8 +214,7 @@ function unframed_sql_json_filterLikeCount ($pdo, $prefix, $name, $filter,
     $like=NULL) {
     list($where, $params) = unframed_sql_filterLike($filter, $like);
     return unframed_sql_select_count (
-        $pdo, $prefix.$name, $name.'_json',
-        implode(" AND ", $where), $params
+        $pdo, $prefix.$name, $name.'_json', $where, $params
         );
 }
 
