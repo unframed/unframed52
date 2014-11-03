@@ -18,7 +18,8 @@ function unframed_cast_url($uri=NULL) {
 }
 
 /**
- * POST a JSON encoded $content to a $url with HTTP/1.0 and return TRUE.
+ * POST a JSON encoded $content to a $url with HTTP/1.0 and return TRUE if
+ * a connection could be established and an HTTP/1.X 200 response was provided.
  *
  * @param string $url POSTed to
  * @param string $content of the encoded JSON object to POST
@@ -40,8 +41,19 @@ function unframed_cast_encoded ($url, $content, $timeout=UNFRAMED_CAST_TIMEOUT) 
             'timeout' => $timeout
             )
         ));
-    @file_get_contents($url, false, $context);
-    return TRUE;
+    $stream = @fopen($url, 'r', false, $context);
+    if ($stream !== FALSE) {
+        // connection succeed, get the HTTP headers and close
+        $meta = stream_get_meta_data($stream);
+        $headers = $meta['wrapper_data'];
+        fclose($stream);
+        // return TRUE if the HTTP response is 200 OK
+        return (is_array($headers) && preg_match(
+            '/^HTTP\/1.(0|1) 200/', $headers[0]
+            ) === 1);
+    }
+    // connection failed
+    return FALSE;
 }
 
 /**
@@ -104,14 +116,14 @@ function unframed_cast_json ($fun, $maxLength=16384, $maxDepth=512) {
     } catch (Unframed $e) {
         http_response_code($e->getCode());
         echo $e->getMessage(), "\n";
+        return FALSE;
     }
-    if (isset($message)) {
-        unframed_cast_ok();
-        unframed_call($fun, array($message));
-    }
+    unframed_cast_ok();
+    unframed_call($fun, array($message));
+    return TRUE;
 }
 
-// test
+// tests
 
 function unframed_cast_test_post ($message) {
     // sleep ...
@@ -166,18 +178,21 @@ function unframed_cast_test_sleeps ($sleeps, $timeout, $concurrent) {
     }
 }
 
+/**
+ * Test various timeouts and maximum execution time.
+ */
 function unframed_cast_test_get ($message) {
-    $sleep = $message->getFloat('sleep', 2.0);
-    $timeouts = $message->getFloatArray('timeouts', array(
-        0.1, 0.2, 0.4, 0.8, 1, 2, 3, 4
-        )); // in ms
-    $sleeps = $message->getFloatArray('sleeps', array(
-        5, 10, 15, 30, 45, 90, 135, 270
-        )); // in seconds
+    $sleep = $message->asFloat('sleep', 2.0);
+    $timeouts = array(
+        1, 2, 3, 4, 5, 6, 7, 8
+        ); // in ms
     $concurrents = unframed_cast_test_timeouts($sleep, $timeouts);
     $concurrency = count($concurrents);
     if ($concurrency > 0) {
         $timeout = (array_sum($concurrents) / $concurrency) / 1000;
+        $sleeps = array(
+            14, 29, 44, 59
+            ); // in seconds
         unframed_cast_test_sleeps(
             $sleeps, $timeout, $concurrency
             );
@@ -194,7 +209,7 @@ function unframed_cast_test_get ($message) {
 }
 
 /**
- * A test script for cast, with variable timeout and sleep times.
+ * The unframed_cast_test application.
  */
 function unframed_cast_test_json ($fun='unframed_cast_test_get') {
     $method = $_SERVER['REQUEST_METHOD'];
