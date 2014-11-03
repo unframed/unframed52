@@ -6,16 +6,6 @@
  * @author Laurent Szyster
  */
 
-/**
- * First, let the script run through after its input is closed.
- *
- * This ensure that network timeouts don't prevent longer running
- * processes like static resources generation or interrupt
- * database transactions without a rollback.
- */
-
-ignore_user_abort(true);
-
 if (!function_exists('http_response_code')) {
     function http_response_code($code) {
         header('x', TRUE, $code);
@@ -81,16 +71,17 @@ function unframed_call ($fun, $array) {
     if (!is_array($array)) {
         throw new Unframed('Type Error - '.var_export($array, TRUE).' is not an array');
     }
-    if (is_string($fun)) {
-        if (function_exists($fun)) {
-            return call_user_func_array($fun, $array);
-        } else {
-            throw new Unframed('Name Error - '.$fun);
-        }
-    } elseif (is_callable($fun)) {
-        return call_user_func_array($fun, $array);
-    } else {
+    if (is_string($fun) && !function_exists($fun)) {
+        throw new Unframed('Name Error - '.$fun.' does not exist');
+    }
+    if (!is_callable($fun)) {
         throw new Unframed('Type Error - '.var_export($fun, TRUE).' is not callable');
+    } else {
+        // $errors = new UnframedErrors();
+        // set_error_handler(array($errors, 'push'));
+        $response = call_user_func_array($fun, $array);
+        // restore_error_handler();
+        return $response;
     }
 }
 
@@ -171,9 +162,23 @@ function unframed_configure ($concurrent, $cast_timeout, $loop_timeout) {
     return FALSE;
 }
 
+// main
+
+unframed_no_script(__FILE__);
+
+/**
+ * First, let the script run through after its input is closed.
+ *
+ * This ensure that network timeouts don't prevent longer running
+ * processes like static resources generation or interrupt
+ * database transactions without a rollback.
+ */
+
+ignore_user_abort(true);
+
 @include_once(unframed_configuration());
 if (!defined('UNFRAMED_CONCURRENT')) {
-    if (unframed_configure(8, 0.005, 29)) {
+    if (unframed_configure(8, 0.005, 59)) {
         require(unframed_configuration());
     }
 }
