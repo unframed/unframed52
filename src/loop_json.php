@@ -53,7 +53,7 @@ function unframed_loop_json ($uris, $seconds, $semaphore) {
     unframed_cast_ok();
     if (!(
         file_exists($semaphore) &&
-        ((time() - filemtime($semaphore)) < $interval)
+        ((time() - @filemtime($semaphore)) < $interval)
         )) {
         touch($semaphore);
         $now = microtime(TRUE);
@@ -65,7 +65,9 @@ function unframed_loop_json ($uris, $seconds, $semaphore) {
         $encoded = unframed_loop_cast_all($uris, $state);
         sleep($seconds);
         if (file_exists($semaphore)) {
-            unframed_cast_encoded(unframed_cast_url(), $encoded);
+            if (!unframed_cast_encoded(unframed_cast_url(), $encoded, 0.1)) {
+                unlink($semaphore);
+            }
         }
     }
     return TRUE;
@@ -110,7 +112,7 @@ function unframed_loop_stop ($semaphore) {
  * @return FALSE if the loop is not running
  */
 function unframed_loop_status ($semaphore) {
-    return filemtime($semaphore);
+    return @filemtime($semaphore);
 }
 
 class UnframedLoopControl {
