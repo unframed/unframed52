@@ -20,11 +20,10 @@ function unframed_sql_order($order) {
     if (preg_match('/^(\S+)(?:$|\s+(DESC|ASC)$)/i', $order, $matches) !== 1) {
         throw new Unframed("Invalid SQL order by clause: ".$order."");
     }
-    list($match, $column, $direction) = $matches;
-    if ($direction == "") {
-        return unframed_sql_quote($column).' ASC';
+    if (count($matches) === 3) {
+        return unframed_sql_quote($matches[1]).' '.strtoupper($matches[2]);
     } else {
-        return unframed_sql_quote($column).' '.strtoupper($direction);
+        return unframed_sql_quote($matches[1]).' ASC';
     }
 }
 
