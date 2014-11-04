@@ -16,11 +16,23 @@ function unframed_sql_fetchAll($st, $parameters, $mode) {
     }
 }
 
+function unframed_sql_order($order) {
+    if (preg_match('/^(\S+)(?:$|\s+(DESC|ASC)$)/i', $order, $matches) !== 1) {
+        throw new Unframed("Invalid SQL order by clause: ".$order."");
+    }
+    list($match, $column, $direction) = $matches;
+    if ($direction == "") {
+        return unframed_sql_quote($column).' ASC';
+    } else {
+        return unframed_sql_quote($column).' '.strtoupper($direction);
+    }
+}
+
 function unframed_sql_orderBy($orders) {
     if ($orders === NULL) {
         return "";
     }
-    return " ORDER BY ".implode(", ", array_map('unframed_sql_quote', $orders));
+    return " ORDER BY ".implode(", ", array_map('unframed_sql_order', $orders));
 }
 
 function unframed_sql_filterLike($filter, $like=NULL) {
