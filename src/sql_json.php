@@ -161,16 +161,21 @@ function unframed_sql_json_insert ($pdo, $prefix, $name, $array) {
         "INSERT INTO ".$table." (".$columns.") VALUES (".$parameters.")"
         );
     if (unframed_sql_json_execute($st, $values, $keys) === 1) {
-        $inserted = $st->lastInsertId();
+        $inserted = $pdo->lastInsertId();
         $array[$name] = $inserted;
-        unframed_sql_execute($pdo->prepare(
+        $sql = (
             "UPDATE ".$table." SET "
-            .unframed_sql_quote($name.'_json')." = ? WHERE "
-            .unframed_sql_quote($name)." = ?"
-            ), array(json_encode($array), $inserted));
+            .unframed_sql_quote($name.'_json')." = :json WHERE "
+            .unframed_sql_quote($name)." = :id"
+            );
+        unframed_sql_execute($pdo->prepare($sql), array(
+            'json' => json_encode($array),
+            'id' => $inserted
+            ));
         return $inserted;
+    } else {
+        throw new Unframed('Failed to insert JSON in table '.$prefix.$name);
     }
-    return FALSE;
 }
 
 /**
