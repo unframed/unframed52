@@ -70,7 +70,7 @@ function unframed_sql_json_table ($prefix, $name, $model) {
  * the data type found in the $models for columns.
  *
  */
-function unframed_sql_json_schema ($prefix, $models, $factory, $exist) {
+function unframed_sql_json_schema ($prefix, $models, $factory, $exist, $index=FALSE) {
     $indexes = array();
     $statements = array();
     foreach($models as $name => $model) {
@@ -79,13 +79,18 @@ function unframed_sql_json_schema ($prefix, $models, $factory, $exist) {
             foreach($model as $key => $value) {
                 if (is_scalar($value) && $value != NULL) {
                     if (array_key_exists($key, $indexes)) {
-                        throw new Unframed('Name Error - column name '.$key.' is not unique');
+                        throw new Unframed(
+                            'Name Error - column name '.$key.' is not unique'
+                            );
                     }
                     $indexes[$key] = $name;
-                    array_push($statements, (
-                        "CREATE INDEX ".unframed_sql_quote($prefix.$key)
-                        ." ON ".unframed_sql_quote($prefix.$name)."(".unframed_sql_quote($key).")"
-                        ));
+                    if ($index === TRUE) {
+                        array_push($statements, (
+                            "CREATE INDEX ".unframed_sql_quote($prefix.$key)
+                            ." ON ".unframed_sql_quote($prefix.$name)
+                            ."(".unframed_sql_quote($key).")"
+                            ));
+                    }
                 }
             }
         }
@@ -95,12 +100,12 @@ function unframed_sql_json_schema ($prefix, $models, $factory, $exist) {
 
 /**
  * Map the scalar values in an associative $array into
- * a result row, plus its JSON encoded string as $name.'_json'.
+ * a result row.
  */
-function unframed_sql_json_write ($name, $array) {
-    $row = array($name.'_json' => json_encode($array));
+function unframed_sql_json_scalars ($array, $name=NULL) {
+    $row = array();
     foreach ($array as $key => $value) {
-        if (is_scalar($value)) {
+        if ($key != $name && is_scalar($value)) {
             $row[$key] = $value;
         }
     }
@@ -131,60 +136,69 @@ function unframed_sql_json_execute ($st, $values, $keys) {
 }
 
 /**
- * Prepare an SQL statement to insert (or replace) many $arrays in table $name,
- * encode non-scalars parameters as JSON, execute the statements or fail.
+ * Use $pdo to INSERT the scalar values of an $array in a table with a $prefix
+ * and a $name, then retrieve the last inserted (relation's) id and UPDATE the
+ * $name.'_json' column  of this new relation with the JSON encoded string of
+ * the full $array.
  *
  * @param PDO $pdo the database connection
- * @param string $name of the table to delete from
- * @param string $values to insert or replace, indexed by column names
+ * @param string $name the prefix of the table to insert into
+ * @param string $name the name of the table to insert into
+ * @param string $array to insert as scalars and update as JSON.
  *
- * @return the number of rows affected, 1 on success.
+ * @return the inserted primary key.
  *
  * @throws Unframed if the statement failed without throwing a PDO exception
  */
-function unframed_sql_json_insert_all ($pdo, $prefix, $name, $arrays) {
-    $values = unframed_sql_json_write($name, $array);
+function unframed_sql_json_insert ($pdo, $prefix, $name, $array) {
+    $values = unframed_sql_json_scalars($array, $name);
     $keys = array_keys($values);
+    $L = count($keys);
+    $table = unframed_sql_quote($prefix.$name);
     $columns = implode(', ', array_map('unframed_sql_quote', $keys));
-    $parameters = implode('), (', array_fill(0, count($arrays), implode(
-        ', ', array_fill(0, count($keys), '?')
-        )));
-    $sql = (
-        "INSERT INTO ".unframed_sql_quote($prefix.$name)
-        ." (".$columns.") VALUES ((".$parameters."))"
+    $parameters = implode(', ', array_fill(0, $L, '?'));
+    $st = $pdo->prepare(
+        "INSERT INTO ".$table." (".$columns.") VALUES (".$parameters.")"
         );
-    $st = $pdo->prepare($sql);
-    unframed_sql_execute($st);
-    return $st->rowCount();
+    if (unframed_sql_json_execute($st, $values, $keys) === 1) {
+        $inserted = $st->lastInsertId();
+        $array[$name] = $inserted;
+        unframed_sql_execute($pdo->prepare(
+            "UPDATE ".$table." SET "
+            .unframed_sql_quote($name.'_json')." = ? WHERE "
+            .unframed_sql_quote($name)." = ?"
+            ), array(json_encode($array), $inserted));
+        return $inserted;
+    }
+    return FALSE;
 }
 
 /**
- * Prepare an SQL statement to insert (or replace) $values in $table, encode
- * non-scalars parameters as JSON, execute the statements or fail.
+ * Use $pdo to REPLACE the scalar values of $array in the columns of a table
+ * with a $prefix and $name, along with the $name.'_json' column.
  *
  * @param PDO $pdo the database connection
- * @param string $table the name of the table to delete from
- * @param string $values to insert or replace, indexed by column names
+ * @param string $prefix of the table to replace into
+ * @param string $name of the table to replace into
+ * @param string $array to replace, indexed by column names
  *
  * @return the number of rows affected, 1 on success.
  *
  * @throws Unframed if the statement failed without throwing a PDO exception
  */
-function unframed_sql_json_insert ($pdo, $prefix, $name, $array, $verb='INSERT') {
-    $values = unframed_sql_json_write($name, $array);
+function unframed_sql_json_replace ($pdo, $prefix, $name, $array) {
+    $values = unframed_sql_json_scalars($array);
+    $values[$name.'_json'] = json_encode($array);
     $keys = array_keys($values);
     $L = count($keys);
     $columns = implode(', ', array_map('unframed_sql_quote', $keys));
     $parameters = implode(', ', array_fill(0, $L, '?'));
     $sql = (
-        $verb." INTO ".unframed_sql_quote($prefix.$name)
+        "REPLACE INTO ".unframed_sql_quote($prefix.$name)
         ." (".$columns.") VALUES (".$parameters.")"
         );
-    return unframed_sql_json_execute($pdo->prepare($sql), $values, $keys);
-}
-
-function unframed_sql_json_replace ($pdo, $prefix, $name, $array) {
-    return unframed_sql_json_insert ($pdo, $prefix, $name, $array, 'REPLACE');
+    $st = $pdo->prepare($sql);
+    return unframed_sql_json_execute($st, $values, $keys);
 }
 
 function unframed_sql_json_select ($pdo, $prefix, $name, $filter,
