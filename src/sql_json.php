@@ -161,7 +161,7 @@ function unframed_sql_json_insert ($pdo, $prefix, $name, $array) {
         "INSERT INTO ".$table." (".$columns.") VALUES (".$parameters.")"
         );
     if (unframed_sql_json_execute($st, $values, $keys) === 1) {
-        $inserted = $pdo->lastInsertId();
+        $inserted = intval($pdo->lastInsertId());
         $array[$name] = $inserted;
         $sql = (
             "UPDATE ".$table." SET "
