@@ -1,11 +1,11 @@
-<?php 
+<?php
 
 require_once(dirname(__FILE__).'/get_json.php');
 
 unframed_no_script(__FILE__);
 
 /**
- * Returns the JSON body of $maxLength bytes from a POST request, decoded as an array of 
+ * Returns the JSON body of $maxLength bytes from a POST request, decoded as an array of
  * $maxDepth and wrapped in an UnframedMessage or throw an exception.
  *
  * @param int $maxLength the maximum length of the request JSON body
@@ -22,9 +22,9 @@ function unframed_post_json_body($maxLength=16384, $maxDepth=512, $options=0) {
     }
     $body = file_get_contents('php://input', NULL, NULL, NULL, $maxLength);
     if (defined('JSON_BIGINT_AS_STRING')) {
-        $json = json_decode($body, TRUE, $maxDepth, $options|JSON_BIGINT_AS_STRING);
+        $json = @json_decode($body, TRUE, $maxDepth, $options|JSON_BIGINT_AS_STRING);
     } else {
-        $json = json_decode($body, TRUE);
+        $json = @json_decode($body, TRUE);
     }
     if ($json === NULL) {
         throw new Unframed(json_last_error_msg(), 400);
@@ -38,7 +38,7 @@ function unframed_post_json_body($maxLength=16384, $maxDepth=512, $options=0) {
  * an array that will be sent as a JSON body in the HTTP response.
  *
  * @param function $fun the function to apply
- * @param bool $iolist wether the response is a list of JSON strings, default to FALSE 
+ * @param bool $iolist wether the response is a list of JSON strings, default to FALSE
  * @param int $maxLength the maximum length of the request JSON body
  * @param int $maxDepth the maximum depth of the request JSON object
  *
