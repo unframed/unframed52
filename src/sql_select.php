@@ -35,17 +35,23 @@ function unframed_sql_orderBy($orders) {
 }
 
 function unframed_sql_filterLike($filter, $like=NULL) {
-    $where = array();
+    $whereFilter = array();
     $params = array();
     foreach ($filter as $column => $value) {
-        if ($column === $like) {
-            array_push($where, unframed_sql_quote($like)." like ?");
-        } else {
-            array_push($where, unframed_sql_quote($column)." = ?");
-        }
+        array_push($whereFilter, unframed_sql_quote($column)." = ?");
         array_push($params, $value);
     }
-    return array(implode(" AND ", $where), $params);
+    if ($like!==NULL) {
+        $whereLike = array();
+        foreach ($like as $column => $value) {
+            array_push($whereLike, unframed_sql_quote($column)." like ?");
+            array_push($params, $value);
+        }
+        if (count($whereLike)>0) {
+            array_push($whereFilter, "(".implode(" OR ", $whereLike).")");
+        }
+    }
+    return array(implode(" AND ", $whereFilter), $params);
 }
 
 /**
