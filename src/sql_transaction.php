@@ -96,6 +96,16 @@ function unframed_sql_transaction($pdo, $fun, $array) {
     }
 }
 
+function unframed_sql_bindValue ($st, $parameter, $value) {
+    if ($value == NULL) {
+        $st->bindValue($parameter, $value, PDO::PARAM_NULL);
+    } elseif (is_int($value)) {
+        $st->bindValue($parameter, $value, PDO::PARAM_INT);
+    } else {
+        $st->bindValue($parameter, $value);
+    }
+}
+
 /**
  * Execute a prepared statement eventually with parameters and return TRUE
  * on success or throw an Unframed exception if the SQL statement's execution
@@ -111,18 +121,19 @@ function unframed_sql_transaction($pdo, $fun, $array) {
  * @throws Unframed if the execution failed without PDOException
  */
 function unframed_sql_execute($st, $parameters=NULL) {
-    if ($parameters != NULL) {
-        foreach ($parameters as $index => $value) {
-            if (is_int($index)) {
-                $index =+ 1;
+    if ($parameters !== NULL) {
+        if (unframed_is_list($parameters)) {
+            $index = 1;
+            foreach ($parameters as $value) {
+                unframed_sql_bindValue($st, $index, $value);
+                $index = $index + 1;
             }
-            if ($value == NULL) {
-                $st->bindValue($index, $value, PDO::PARAM_NULL);
-            } elseif (is_int($value)) {
-                $st->bindValue($index, $value, PDO::PARAM_INT);
-            } else {
-                $st->bindValue($index, $value);
+        } elseif (unframed_is_map($parameters)) {
+            foreach ($parameters as $key => $value) {
+                unframed_sql_bindValue($st, $key, $value);
             }
+        } else {
+            throw new Unframed('SQL parameters must be an array');
         }
     }
     if ($st->execute()) {

@@ -4,14 +4,6 @@ require_once(dirname(__FILE__).'/Unframed.php');
 
 unframed_no_script(__FILE__);
 
-function unframed_is_list ($array) {
-    return (0 === count(array_diff(range(0, $count-1), array_keys($array))));
-}
-
-function unframed_is_map ($array) {
-    return (count($array) === count(array_filter(array_keys($array), 'is_string')));
-}
-
 /**
  * A convenience to get typed properties from an associative array, a default or fail.
  */

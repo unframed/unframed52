@@ -162,6 +162,14 @@ function unframed_configure ($concurrent, $cast_timeout, $loop_timeout) {
     return FALSE;
 }
 
+function unframed_is_list ($array) {
+    return (0 === count(array_diff(range(0, count($array)-1), array_keys($array))));
+}
+
+function unframed_is_map ($array) {
+    return (count($array) === count(array_filter(array_keys($array), 'is_string')));
+}
+
 // main
 
 unframed_no_script(__FILE__);
