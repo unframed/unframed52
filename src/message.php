@@ -8,13 +8,14 @@ unframed_no_script(__FILE__);
  * A convenience to get typed properties from an associative array, a default or fail.
  */
 class UnframedMessage {
+    public $array;
     function __construct($array) {
         $this->array = $array;
     }
     /**
      * Get the values of the wrapped associative array as a list
      */
-    function asList () {
+    function values () {
         return array_values($this->array);
     }
     /**
@@ -154,7 +155,7 @@ class UnframedMessage {
      * @throws Unframed exception with a name or type error
      */
     function getList($key, $default=NULL) {
-        $value = $this->getDefault($key, $default);
+        $value = $this->getArray($key, $default);
         if (!unframed_is_list($value)) {
             throw new Unframed('Type Error - '.$key.' must be a List');
         }
@@ -176,7 +177,7 @@ class UnframedMessage {
      * @throws Unframed exception with a name or type error
      */
     function getMap($key, $default=NULL) {
-        $value = $this->getDefault($key, $default);
+        $value = $this->getArray($key, $default);
         if (!unframed_is_map($value)) {
             throw new Unframed('Type Error - '.$key.' must be a Map');
         }
