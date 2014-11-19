@@ -92,12 +92,11 @@ function unframed_sql_select_column($pdo, $table, $column,
     return unframed_sql_fetchAll($st, $params, PDO::FETCH_COLUMN);
 }
 
-function unframed_sql_select_count($pdo, $table, $column,
+function unframed_sql_select_count($pdo, $table,
     $where=NULL, $params=NULL) {
     $st = $pdo->prepare(
         "SELECT COUNT(*) FROM ".unframed_sql_quote($table)
-        ." WHERE ".unframed_sql_quote($column)." IS NOT NULL"
-        .(($where === NULL) || ($where == "") ? "" : " AND ".$where)
+        .(($where === NULL) || ($where == "") ? "" : " WHERE ".$where)
         );
     return intval(unframed_sql_fetch($st, $params, PDO::FETCH_COLUMN));
 }
