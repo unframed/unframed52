@@ -163,6 +163,9 @@ function unframed_configure ($concurrent, $cast_timeout, $loop_timeout) {
 }
 
 function unframed_is_list ($array) {
+    if (count($array) === 0) {
+        return TRUE;
+    }
     return (0 === count(array_diff(range(0, count($array)-1), array_keys($array))));
 }
 
