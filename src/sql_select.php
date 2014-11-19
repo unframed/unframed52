@@ -186,7 +186,7 @@ function unframed_sql_select_row($pdo, $table, $column, $key) {
  * @param PDO $pdo the database connection to use
  * @param string $table the name of the table (or view) to select from
  * @param array $columns names of the columns to select, means '*' if NULL or empty
- * @param string $where SQL clause by default NULL
+ * @param string $where SQL expression, empty by default
  * @param array $params positional or keyed parameters
  * @param int $offset to select from, 0 by default
  * @param int $limit number of rows returned, 30 by default
@@ -202,7 +202,7 @@ function unframed_sql_select_rows($pdo, $table,
     $sql = (
         "SELECT ".unframed_sql_columns($columns)
         ." FROM ".unframed_sql_quote($table)
-        .$where
+        .($where === '' ? "" : " WHERE ".$where)
         .unframed_sql_orderBy($orderBy)
         ." LIMIT ".strval($limit)." OFFSET ".strval($offset)
         );
