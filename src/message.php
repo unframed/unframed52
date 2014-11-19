@@ -19,7 +19,10 @@ class UnframedMessage {
         return array_values($this->array);
     }
     /**
+     * Return TRUE if the $key exists, FALSE otherwise.
      *
+     * @param string $key
+     * @return boolean
      */
     function has ($key) {
         return array_key_exists($key, $this->array);
@@ -160,12 +163,6 @@ class UnframedMessage {
             throw new Unframed('Type Error - '.$key.' must be a List');
         }
         return $value;
-    }
-    function getListAsFloat($key, $default=NULL) {
-        return array_map('floatval', $this->getList($key, $default));
-    }
-    function getListAsInt($key, $default=NULL) {
-        return array_map('intval', $this->getList($key, $default));
     }
     /**
      * Get the value of $key or a $default not NULL, assert that it is a map or fail.
