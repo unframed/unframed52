@@ -163,6 +163,9 @@ function unframed_configure ($concurrent, $cast_timeout, $loop_timeout) {
 }
 
 function unframed_is_list ($array) {
+    if (!is_array($array)) {
+        return FALSE;
+    }
     if (count($array) === 0) {
         return TRUE;
     }
@@ -170,6 +173,9 @@ function unframed_is_list ($array) {
 }
 
 function unframed_is_map ($array) {
+    if (!is_array($array)) {
+        return FALSE;
+    }
     return (count($array) === count(array_filter(array_keys($array), 'is_string')));
 }
 
