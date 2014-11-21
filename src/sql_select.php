@@ -44,8 +44,16 @@ function unframed_sql_filterLike($filter, $like=NULL) {
     $whereFilter = array();
     $params = array();
     foreach ($filter as $column => $value) {
-        array_push($whereFilter, unframed_sql_quote($column)." = ?");
-        array_push($params, $value);
+        if (!unframed_is_list($value)) {
+            array_push($whereFilter, unframed_sql_quote($column)." = ?");
+            array_push($params, $value);
+        } elseif (count($value) > 0) {
+            array_push($whereFilter, (
+                unframed_sql_quote($column)
+                ." IN (".implode(', ', array_fill(0, count($value), '?')).")"
+                ));
+            $params = array_merge($params, $value);
+        }
     }
     if ($like !== NULL && count($like) > 0) {
         $whereLike = array();
