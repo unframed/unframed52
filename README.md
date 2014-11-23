@@ -6,9 +6,10 @@ Requirements
 ---
 Unframed52 must :
 
-- support PHP 5.2 or higher with `ignore_user_abort(true)` effectively enabled (by Apache, PHP, etc).
-- reliably invalidate cache resources, schedule jobs and poll events from queues;
-- name the application's database tables and columns in a way that is both practical and consistent;
-- update SQL relations and query JSON collections conveniently;
-- support JSON web APIs and fail fast to HTTP errors;
-- authorize strongly identified user agents;
+- support PHP 5.2 or higher with `ignore_user_abort(true)` effectively enabled;
+- implement the boilerplate of JSON web APIs that fail fast to HTTP errors;
+- be able to verify JSON message signatures against public RSA keys;
+- schedule jobs and poll queues without the `fnctl_*` functions;
+- provide practical conveniences to perform the most common SQL statements;
+- implement a fast-to-read protocol to map JSON to SQL;
+- offer developpers a convenient API in a single prototype class.

@@ -162,6 +162,10 @@ function unframed_configure ($concurrent, $cast_timeout, $loop_timeout) {
     return FALSE;
 }
 
+function unframed_json_decode ($encoded) {
+    return json_decode($encoded, TRUE);
+}
+
 function unframed_is_list ($array) {
     if (!is_array($array)) {
         return FALSE;
