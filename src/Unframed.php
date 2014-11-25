@@ -162,25 +162,43 @@ function unframed_configure ($concurrent, $cast_timeout, $loop_timeout) {
     return FALSE;
 }
 
+/**
+ * Allways decode JSON to associative arrays.
+ *
+ * @param string $encoded JSON
+ * @return array
+ */
 function unframed_json_decode ($encoded) {
     return json_decode($encoded, TRUE);
 }
 
-function unframed_is_list ($array) {
-    if (!is_array($array)) {
+/**
+ * Return TRUE if $value is a list, FALSE otherwise.
+ *
+ * @param any $value
+ * @return boolean
+ */
+function unframed_is_list ($value) {
+    if (!is_array($value)) {
         return FALSE;
     }
-    if (count($array) === 0) {
+    if (count($value) === 0) {
         return TRUE;
     }
-    return (0 === count(array_diff(range(0, count($array)-1), array_keys($array))));
+    return (0 === count(array_diff(range(0, count($value)-1), array_keys($value))));
 }
 
-function unframed_is_map ($array) {
-    if (!is_array($array)) {
+/**
+ * Return TRUE if $value is a map, FALSE otherwise.
+ *
+ * @param any $value
+ * @return boolean
+ */
+function unframed_is_map ($value) {
+    if (!is_array($value)) {
         return FALSE;
     }
-    return (count($array) === count(array_filter(array_keys($array), 'is_string')));
+    return (count($value) === count(array_filter(array_keys($value), 'is_string')));
 }
 
 // main
