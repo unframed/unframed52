@@ -23,11 +23,26 @@ require_once dirname(__FILE__).'/www_invalidate.php';
 require_once dirname(__FILE__).'/jsbn.php';
 
 /**
- * Get the file system "base" path to this site, using the SCRIPT_FILENAME.
+ * Get the file system "base" path to a $relative path.
+ *
+ * For instance :
+ *
+ *   unframed_site_path ('/wp-content/plugin/');
+ *
+ * Yields this on our <who-is-your-daddy.com> test site :
+ *
+ *   "/var/chroot/home/content/p3pnexwpnas03_data03/28/2265028/html/"
+ *
+ * @param string $relative path to search for in the SCRIPT_FILENAME.
+ * @return string
  */
-function unframed_site_path ($relative) {
+function unframed_site_path ($relative='') {
 	$path = $_SERVER['SCRIPT_FILENAME'];
-	return substr($path, 0, strpos($path, $relative)).'/';
+	return (
+		$relative == '' ?
+		dirname($path).'/':
+		substr($path, 0, strpos($path, $relative)).'/'
+		);
 }
 
 /**
@@ -38,78 +53,124 @@ function unframed_site_path ($relative) {
  *
  *   unframed_site_uri ('/wp-content/plugin/');
  *
- * Can yield :
+ * Will yield the strings :
  *
- * - 127.0.0.1:8089
- * - yoursite.com:80
- * - subdomain.yoursite.com:80
- * - yoursite.com:80/subdomain
+ * - "127.0.0.1:8089"
+ * - "yoursite.com:80"
+ * - "subdomain.yoursite.com:80"
+ * - "yoursite.com:80/subdomain"
  *
+ * Respectively when called from requests to :
+ *
+ * - http://127.0.0.1:8089/wp-content/plugin/whatever/script.php
+ * - https://yoursite.com/wp-content/plugin/whatever/script.php
+ * - http://subdomain.yoursite.com/wp-content/plugin/whatever/script.php
+ * - http://yoursite.com/subdomain/wp-content/plugin/whatever/script.php
+ *
+ * @param string $relative, default to ''
+ * @return string
  */
-function unframed_site_uri ($relative=NULL) {
+function unframed_site_uri ($relative='') {
 	$uri = $_SERVER['REQUEST_URI'];
 	$path = (
-		$relative === NULL ?
+		$relative == '' ?
 		dirname($uri) :
 		substr($uri, 0, strpos($uri, $relative))
 		);
 	return $_SERVER['SERVER_NAME'].':'.$_SERVER['SERVER_PORT'].$path;
 }
 
+/**
+ * An Unframed Application Prototype
+ */
 class UnframedApplication {
 	private $_relative;
 	private $_domain;
-	private $_message;
+	private $_options;
 	private $_prefix;
 	private $_pdo;
 	public function __construct ($relative = '', $domain = '_') {
+		$this->_relative = $relative;
 		$this->_domain = $domain;
-		$configFilename = $this->configFilename($relative);
-		if (file_exists($configFilename)) {
-			require $configFilename;
-			if (function_exists('unframed_application_config')) {
-				$m = unframed_message(unframed_application_config());
+		$this->configureAndConnect(
+			$this->requireOptions(
+				$this->configFilename()
+				)
+			);
+	}
+	/**
+	 * Require $filename and return the result of $fun(), or throws an exception.
+	 *
+	 * @param string $filename to require
+	 * @param string $fun to evaluate, 'unframed_application_options' by default
+	 */
+	protected function requireOptions ($filename, $fun = 'unframed_application_options') {
+		if (file_exists($filename)) {
+			require $filename;
+			if (function_exists($fun)) {
+				return call_user_func($fun);
 			} else {
 				throw new Unframed(
-					'Missing unframed_application_config in '.$configFilename
-					);
-			}
-			$this->_relative = $relative;
-			$this->_message = $m;
-			$this->_prefix = $m->getString('sql_prefix');
-			if ($m->has('sql_dsn')) {
-				$this->_pdo = unframed_sql_open(
-					$m->getString('sql_dsn'),
-					$m->getDefault('sql_username', NULL),
-					$m->getDefault('sql_password', NULL)
-					);
-			} elseif ($m->has('mysql_name')) {
-				$this->_pdo = unframed_mysql_open(
-					$m->getString('mysql_name'),
-					$m->getString('mysql_user'),
-					$m->getString('mysql_pass'),
-					$m->getString('mysql_host', 'localhost'),
-					$m->getString('mysql_port', '3306')
-					);
-			} else {
-				throw new Unframed(
-					'Invalid configuration message in '.$configFilename
-					.': '.json_encode($m->array)
+					'Missing '.$fun.'() in: '.$filename
 					);
 			}
 		} else {
 			throw new Unframed(
-				'PDO configuration file not found in '.$configFilename
+				'Application options file not found: '.$filename
 				);
 		}
 	}
 	/**
-	 * Return this application's configuration message.
+	 * Configure access to an SQL database and create a PDO connection or throw
+	 * and exception.
 	 *
-	 * @return UnframedMessage configuration.
+	 * Mandatory options are :
+	 *
+	 * - 'sql_prefix', the global table prefix for this application
+	 * - 'sql_dsn' or 'mysql_name'
+	 *
+	 * For MySQL connections, the 'mysql_user' and 'mysql_pass' are mandatory.
+	 *
+	 * You may also specify 'mysql_host' and 'mysql_port', the defaults are
+	 * 'localhost' and '3306'.
+	 *
+	 * For other connections, the 'sql_username' and 'sql_password' are optionals
+	 * and default to NULL.
+	 *
+	 * @param array $options of configuration
 	 */
-	public function message () {
-		return $this->_message;
+	protected function configureAndConnect ($options) {
+		$m = unframed_message($options);
+		$this->_options = $m;
+		$this->_prefix = $m->getString('sql_prefix');
+		if ($m->has('sql_dsn')) {
+			$this->_pdo = unframed_sql_open(
+				$m->getString('sql_dsn'),
+				$m->getDefault('sql_username', NULL),
+				$m->getDefault('sql_password', NULL)
+				);
+		} elseif ($m->has('mysql_name')) {
+			$this->_pdo = unframed_mysql_open(
+				$m->getString('mysql_name'),
+				$m->getString('mysql_user'),
+				$m->getString('mysql_pass'),
+				$m->getString('mysql_host', 'localhost'),
+				$m->getString('mysql_port', '3306')
+				);
+		} else {
+			throw new Unframed(
+				'Invalid configuration message in '.$configFilename
+				.': '.json_encode($m->array)
+				);
+		}
+	}
+	/**
+	 * Return this application's (configuration) options.
+	 *
+	 * @return UnframedMessage options.
+	 */
+	public function options () {
+		return $this->_options;
 	}
 	/**
 	 * Return this application's base filesystem path.
@@ -379,11 +440,6 @@ class UnframedApplication {
 			return FALSE;
 		}
 	}
-	/*
-	public function updateRow ($name, $values) {
-		;
-	}
-	*/
     /**
      * From MailPoet's table $name, fetch and decode all JSON as arrays
      *
