@@ -67,7 +67,7 @@ function unframed_site_path ($relative='') {
  * - http://subdomain.yoursite.com/wp-content/plugin/whatever/script.php
  * - http://yoursite.com/subdomain/wp-content/plugin/whatever/script.php
  *
- * @param string $relative, default to ''
+ * @param string $relative default to ''
  * @return string
  */
 function unframed_site_uri ($relative='') {
@@ -429,7 +429,8 @@ class UnframedApplication {
 	 *
 	 * @param string $name the unprefixed name of the table
 	 * @param array $row to insert
-	 * @return any
+	 *
+	 * @return any the inserted ID or FALSE
 	 */
 	public function insertRow ($name, $row) {
 		if (unframed_sql_insert_values (
@@ -446,7 +447,7 @@ class UnframedApplication {
      * @param string $name of the MailPoet's table
      * @return an array of associative arrays
      */
-    private function fetchAllJSON ($name) {
+    public function fetchAllJSON ($name) {
         return array_map('unframed_json_decode', $this->fetchAllColumn(
             "SELECT ".$name."_json FROM ".$this->prefix($this->table($name))
             ));
@@ -501,7 +502,7 @@ class UnframedApplication {
      * @param string $name of the MailPoet table
      * @param array $values to replace
      *
-     * @return boolean
+     * @return integer the number of rows updated
      */
 	public function replaceJSON ($name, $values) {
 		return unframed_sql_json_replace(
@@ -514,7 +515,7 @@ class UnframedApplication {
      * @param string $name of the MailPoet table
      * @param array $values to update
      *
-     * @return boolean
+     * @return integer the number of rows updated
      */
     public function updateJSON($name, $values) {
         if (!array_key_exists($name, $values)) {
@@ -532,7 +533,7 @@ class UnframedApplication {
         }
     }
     /**
-     * Select a limited set of JSON object from the MailPoet table $name,
+     * Select a limited set of JSON objects from the MailPoet table $name,
      * using the following $options:
      *
 	 * - 'where', an SQL expression with parameters placeholders
@@ -543,7 +544,7 @@ class UnframedApplication {
      *
      * @param string $name the unprefixed name of the table
      * @param array $options
-     * @return array of arrays
+     * @return array a list of JSON encoded string
      */
     public function selectJSON ($name, $options=array()) {
         $m = new UnframedMessage($options);
@@ -559,7 +560,7 @@ class UnframedApplication {
             );
     }
     /**
-     * Select a limited set of JSON object from the MailPoet table $name,
+     * Select a limited set of JSON objects from the MailPoet table $name,
      * using the following $options:
      *
      * - 'filter', a map of column names to values
@@ -570,7 +571,7 @@ class UnframedApplication {
      *
      * @param string $name the unprefixed name of the table
      * @param array $options
-     * @return array of arrays
+     * @return array a list of JSON encoded string
      */
     public function filterJSON ($name, $options=array()) {
         $m = new UnframedMessage($options);
