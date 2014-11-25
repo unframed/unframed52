@@ -10,6 +10,6 @@ Unframed52 must :
 - implement the boilerplate of JSON web APIs that fail fast to HTTP errors;
 - be able to verify JSON message signatures against public RSA keys;
 - schedule jobs and poll queues without the `fnctl_*` functions;
-- provide practical conveniences to perform the most common SQL statements;
+- provide practical conveniences for common SQL statements;
 - implement a fast-to-read protocol to map JSON to SQL;
 - offer developpers a convenient API in a single prototype class.
