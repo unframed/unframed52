@@ -92,11 +92,6 @@ class UnframedApplication {
 	public function __construct ($relative = '', $domain = '_') {
 		$this->_relative = $relative;
 		$this->_domain = $domain;
-		$this->configureAndConnect(
-			$this->requireOptions(
-				$this->configFilename()
-				)
-			);
 	}
 	/**
 	 * Require $filename and return the result of $fun(), or throws an exception.
