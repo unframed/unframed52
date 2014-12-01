@@ -357,6 +357,25 @@ class UnframedApplication {
 			);
 	}
 	/**
+	 * Count the number of rows from the table with prefixed $name,
+	 * using the $options:
+	 *
+	 * - 'where', an SQL expression with parameters placeholders
+	 * - 'params', the expression's parameters
+	 *
+	 * @param string $name the unprefixed name of the table
+	 * @param array $options
+	 * @return integer
+	 */
+	public function selectCount ($name, $options = array()) {
+		$m = new UnframedMessage($options);
+		$where = $m->getString('where', '');
+		$params = $m->getArray('params', array());
+		return unframed_sql_select_count(
+			$this->_pdo, $this->prefix($name), $where, $params
+			);
+	}
+	/**
 	 * Select a limited set of rows from the table with prefixed $name,
 	 * using the following $options:
 	 *
