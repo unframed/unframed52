@@ -87,8 +87,8 @@ class UnframedApplication {
 	private $_relative;
 	private $_domain;
 	private $_options;
-	private $_prefix;
 	private $_pdo;
+	protected $_prefix;
 	public function __construct ($relative = '', $domain = '_') {
 		$this->_relative = $relative;
 		$this->_domain = $domain;
