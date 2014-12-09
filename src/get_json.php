@@ -87,12 +87,22 @@ function unframed_ok_json($json, $options=0, $iolist=FALSE) {
  * ...
  */
 function unframed_error_json($e) {
-    $json = array('exception' => array(
-        'message' => $e->getMessage(),
-        'file' => $e->getFile(),
-        'line' => $e->getLine(),
-        'trace' => explode("\n", $e->getTraceAsString())
-        ));
+    $previous = $e->getPrevious();
+    if ($previous === NULL) {
+        $json = array('exception' => array(
+            'message' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => explode("\n", $e->getTraceAsString())
+            ));
+    } else {
+        $json = array('exception' => array(
+            'message' => $previous->getMessage(),
+            'file' => $previous->getFile(),
+            'line' => $previous->getLine(),
+            'trace' => explode("\n", $previous->getTraceAsString())
+            ));
+    }
     if (defined('JSON_PRETTY_PRINT')) {
         $body = json_encode($json, JSON_PRETTY_PRINT);
     } else {
