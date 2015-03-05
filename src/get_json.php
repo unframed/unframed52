@@ -60,7 +60,12 @@ function unframed_error_json($e) {
         flush();
     } else {
         if ($code === 500) {
-            // Reply with a JSON trace for 500 Server Error
+            // Send a 500 Server Error with a JSON trace of the original exception.
+            $previous = $e->getPrevious();
+            while( $previous !== NULL) {
+                $e = $previous;
+                $previous = $e->getPrevious();
+            }
             $json = array('exception' => array(
                 'message' => $e->getMessage(),
                 'file' => $e->getFile(),
