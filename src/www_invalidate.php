@@ -7,7 +7,7 @@ unframed_no_script(__FILE__);
 /*
 
 Resources are invalidated and templates applied in a convenient order,
-from the top to the bottom of the ressource tree, resources first and 
+from the top to the bottom of the ressource tree, resources first and
 paths second, allways in lexycographical order.
 
 For instance :
@@ -19,24 +19,22 @@ For instance :
     /article/0.json
 
 Templates developpers may leverage that sort order to re-use the
-side-effects of the template applied for the /index.html page in 
+side-effects of the template applied for the /index.html page in
 the template that generates the /article/0.html page.
 
 */
 
-function unframed_www_path_add ($root, $path) {
+function unframed_www_path_add (&$root, $path) {
     $names = explode('/', $path);
     $last = count($names) - 1;
     if ($last > 0) {
-        $node = $root;
+        $node = &$root;
         for ($index=0; $index < $last; $index++) {
             $name = $names[$index];
-            $next = $node[$name];
-            if (!isset($next)) {
-                $next = array();
-                $node[$name] = $next;
+            if (!array_key_exists($name, $node)) {
+                $node[$name] = array();
             }
-            $node = $next;
+            $node = &$node[$name];
         }
         $node[$names[$last]] = $path;
     } else {
@@ -44,19 +42,22 @@ function unframed_www_path_add ($root, $path) {
     }
 }
 
-function unframed_www_path_step ($paths, $node) {
+function unframed_www_path_step (&$sorted, $node) {
     $down = array();
-    foreach(sort(array_keys($paths)) as $name) {
+    $names = array_keys($node);
+    sort($names);
+    foreach($names as $name) {
         $path = $node[$name];
         if (is_string($path)) {
-            array_push($paths, $path);
+            array_push($sorted, $path);
         } else {
             array_push($down, $name);
         }
     }
     foreach($down as $name) {
-        unframed_www_path_step($paths, $node[$name]);
+        unframed_www_path_step($sorted, $node[$name]);
     }
+    return $sorted;
 }
 
 function unframed_www_sort ($paths) {
@@ -66,11 +67,11 @@ function unframed_www_sort ($paths) {
     }
     $sorted = array();
     unframed_www_path_step($sorted, $root);
-    return $sorted; 
+    return $sorted;
 }
 
 /**
- * Include then capture the output of PHP templates, write it in 
+ * Include then capture the output of PHP templates, write it in
  * the static folder `www` under their URL keys. Disable execution time
  * limit on the script by default, eventually set a new one.
  *
@@ -78,8 +79,8 @@ function unframed_www_sort ($paths) {
  * in that order, so that template side-effects can be leveraged.
  *
  * Also, note that a PDO object can be injected in the template's scope as
- * `unframed_pdo`, a conveniece to add more statements to an opened 
- * transaction or simply select data to fill the template. 
+ * `unframed_pdo`, a conveniece to add more statements to an opened
+ * transaction or simply select data to fill the template.
  *
  * @param array $unframed_resource the data used to invalidate the web cache.
  * @param array $unframed_route map URIs to either callable or PHP templates.
@@ -87,8 +88,8 @@ function unframed_www_sort ($paths) {
  * @return array of catched exceptions keyed by template path.
  */
 function unframed_www_invalidate(
-    $unframed_resource, 
-    $unframed_routes, 
+    $unframed_resource,
+    $unframed_routes,
     $unframed_www='./',
     $unframed_php='./'
     ) {
@@ -96,11 +97,11 @@ function unframed_www_invalidate(
     $unframed_errors = array();
     foreach ($unframed_paths as $unframed_path) {
         $route = $unframed_routes[$unframed_path];
-        if (is_callable($route, TRUE)) {
+        if (is_callable($route, FALSE)) {
             try {
                 file_put_contents(
-                    $unframed_www.$unframed_path, 
-                    call_user_func_array($route, $array($unframed_resource))
+                    $unframed_www.$unframed_path,
+                    call_user_func_array($route, array($unframed_resource))
                     );
             } catch (Exception $e) {
                 $unframed_errors[$unframed_path] = $e;
