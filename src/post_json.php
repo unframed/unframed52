@@ -5,32 +5,22 @@ require_once(dirname(__FILE__).'/get_json.php');
 unframed_no_script(__FILE__);
 
 /**
- * Returns the JSON body of $maxLength bytes from a POST request, decoded as an array of
- * $maxDepth and wrapped in an UnframedMessage or throw an exception.
+ * Returns the JSON body of $maxLength bytes from a POST request.
  *
  * @param int $maxLength the maximum length of the request JSON body
- * @param int $maxDepth the maximum depth of the request JSON object
- * @param int $options passed to json_decode
  *
- * Note that the JSON_BIGINT_AS_STRING option is allways set for json_decode.
- *
- * @return UnframedMessage
+ * @return string body of a POST request
  */
-function unframed_post_json_body($maxLength=16384, $maxDepth=512, $options=0) {
-    if ($_SERVER['REQUEST_METHOD']!=='POST') {
-        throw new Unframed('Method Not Allowed', 405);
-    }
-    $body = file_get_contents('php://input', NULL, NULL, NULL, $maxLength);
-    if (defined('JSON_BIGINT_AS_STRING')) {
-        $json = @json_decode($body, TRUE, $maxDepth, $options|JSON_BIGINT_AS_STRING);
-    } else {
-        $json = @json_decode($body, TRUE);
-    }
-    if ($json === NULL) {
+function unframed_post_json_body ($maxLength) {
+    return file_get_contents('php://input', NULL, NULL, NULL, $maxLength);
+}
+
+function unframed_post_json_message ($body, $maxDepth) {
+    $message = JSONMessage::parse($body, $maxDepth);
+    if ($message === NULL) {
         throw new Unframed(json_last_error_msg(), 400);
-    } else {
-        return unframed_message($json);
     }
+    return $message;
 }
 
 /**
@@ -38,18 +28,24 @@ function unframed_post_json_body($maxLength=16384, $maxDepth=512, $options=0) {
  * an array that will be sent as a JSON body in the HTTP response.
  *
  * @param function $fun the function to apply
- * @param bool $iolist wether the response is a list of JSON strings, default to FALSE
  * @param int $maxLength the maximum length of the request JSON body
  * @param int $maxDepth the maximum depth of the request JSON object
  *
  * @return void
  */
-function unframed_post_json($fun, $iolist=FALSE, $maxLength=16384, $maxDepth=512) {
+function unframed_post_json($fun, $maxLength=16384, $maxDepth=512, $authorize=NULL) {
     try {
-        unframed_ok_json(unframed_call(
-            $fun, array(unframed_post_json_body($maxLength, $maxDepth))
-            ), 0, $iolist);
-    } catch (Unframed $e) {
+        if ($_SERVER['REQUEST_METHOD']!=='POST') {
+            throw new Unframed('Method Not Allowed', 405);
+        }
+        $body = unframed_post_json_body($maxLength);
+        if ($authorize !== NULL) {
+            call_user_func_array($authorize, array(get_headers(), $body));
+        }
+        $message = unframed_post_json_message($body, $maxDepth);
+        $response = call_user_func_array($fun, array($message));
+        unframed_ok_json($response);
+    } catch (Exception $e) {
         unframed_error_json($e);
     }
 }

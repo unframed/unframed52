@@ -6,10 +6,12 @@ DEPS = \
 	deps \
 	deps/casperjs \
 	deps/test_sites.php \
+	deps/JSONMessage.php \
 	deps/jsbn-min.js
 
 pull: ${DEPS}
 	cd deps/jsbn-min.js && git pull origin
+	cd deps/JSONMessage.php && git pull origin
 	cd deps/test_sites.php && git pull origin
 	cd deps/casperjs && git pull origin
 
@@ -18,6 +20,11 @@ deps/casperjs:
 
 deps/test_sites.php:
 	git clone https://github.com/unframed/test_sites.php.git deps/test_sites.php
+
+deps/JSONMessage.php:
+	git clone \
+		https://github.com/laurentszyster/JSONMessage.php.git \
+		deps/JSONMessage.php
 
 deps/jsbn-min.js:
 	git clone https://github.com/laurentszyster/jsbn-min.js deps/jsbn-min.js

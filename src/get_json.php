@@ -4,43 +4,6 @@ require_once(dirname(__FILE__).'/Unframed.php');
 
 unframed_no_script(__FILE__);
 
-require_once(dirname(__FILE__).'/message.php');
-
-if (!function_exists('json_last_error')) {
-    function json_last_error_msg() {
-        return 'Unknown JSON error';
-    }
-} elseif (!function_exists('json_last_error_msg')) {
-    function json_last_error_msg() {
-        static $errors = array(
-            JSON_ERROR_NONE             => null,
-            JSON_ERROR_DEPTH            => 'Maximum stack depth exceeded',
-            JSON_ERROR_STATE_MISMATCH   => 'Underflow or the modes mismatch',
-            JSON_ERROR_CTRL_CHAR        => 'Unexpected control character found',
-            JSON_ERROR_SYNTAX           => 'Syntax error, malformed JSON',
-            JSON_ERROR_UTF8             => 'Malformed UTF-8 characters, possibly incorrectly encoded'
-        );
-        $error = json_last_error();
-        return array_key_exists($error, $errors) ? $errors[$error] : "Unknown error ({$error})";
-    }
-}
-
-/**
- * Returns the query parameters of a GET request as an UnframedMessage instance
- * or throws an Unframed error 405 if the request method is not GET.
- *
- * @return UnframedMessage
- *
- * @throws Unframed
- */
-function unframed_get_query() {
-    if ($_SERVER['REQUEST_METHOD']!=='GET') {
-        throw new Unframed('Method Not Allowed', 405);
-    } else {
-        return unframed_message($_GET);
-    }
-}
-
 function unframed_http_json ($code, $body) {
     http_response_code($code);
     header("Content-length: ".strlen($body));
@@ -51,20 +14,19 @@ function unframed_http_json ($code, $body) {
 }
 
 /**
- * Set the appropriate HTTP response headers, let PHP set the HTTP response code and send a
- * JSON response body. Note that if 'application/json' is not in the $_SERVER['HTTP_ACCEPT']
- * the JSON will be pretty printed.
+ * Set the appropriate HTTP response headers, let PHP set the HTTP response code
+ * and send a JSON response body. Note that if 'application/json' is not set in
+ * $_SERVER['HTTP_ACCEPT'] then the JSON will be pretty printed.
  *
  * @param array $json the JSON response, may be an list of JSON encoded strings
- * @param array $iolist whether $json is a list of JSON strings, default to FALSE
  * @param int $options passed to json_encode, default to 0
  *
  * @return void
  *
  * @throws Unframed
  */
-function unframed_ok_json($json, $options=0, $iolist=FALSE) {
-    if ($iolist) {
+function unframed_ok_json($json, $options=0) {
+    if (JSONMessage::is_list($json)) {
         $body = '['.implode(',', $json).']';
     } else {
         if (defined('JSON_PRETTY_PRINT')) {
@@ -87,18 +49,37 @@ function unframed_ok_json($json, $options=0, $iolist=FALSE) {
  * ...
  */
 function unframed_error_json($e) {
-    $json = array('exception' => array(
-        'message' => $e->getMessage(),
-        'file' => $e->getFile(),
-        'line' => $e->getLine(),
-        'trace' => explode("\n", $e->getTraceAsString())
-        ));
-    if (defined('JSON_PRETTY_PRINT')) {
-        $body = json_encode($json, JSON_PRETTY_PRINT);
+    if (get_class($e) === 'Unframed') {
+        $code = $e->getCode(); // Get the Unframed's HTTP error code
     } else {
-        $body = json_encode($json);
+        $code = 500; // Set the HTTP error code to 500 for other exceptions
     }
-    unframed_http_json($e->getCode(), $body);
+    if ($_SERVER['REQUEST_METHOD'] === 'HEAD') {
+        // No error response body for HEAD requests
+        http_response_code($code);
+        flush();
+    } else {
+        if ($code === 500) {
+            // Reply with a JSON trace for 500 Server Error
+            $json = array('exception' => array(
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => explode("\n", $e->getTraceAsString())
+                ));
+        } else {
+            // Reply with the exception message for other errors.
+            $json = array('error' => $e->getMessage());
+        }
+        // Allways pretty print when possible, tracebacks should be readable.
+        if (defined('JSON_PRETTY_PRINT')) {
+            $body = json_encode($json, JSON_PRETTY_PRINT);
+        } else {
+            $body = json_encode($json);
+        }
+        // Send a JSON response body for all other methods than HEAD
+        unframed_http_json($code, $body);
+    }
 }
 
 /**
@@ -106,13 +87,20 @@ function unframed_error_json($e) {
  * an array that will be sent as a JSON body in the HTTP response, catch any Unframed
  * exception, reply with an error code and a JSON error message.
  *
- * @param $fun
- * @param $iolist
+ * @param callable $fun
  */
-function unframed_get_json($fun, $iolist=FALSE) {
+function unframed_get_json ($fun) {
     try {
-        unframed_ok_json(unframed_call($fun, array(unframed_get_query())), 0, $iolist);
-    } catch (Unframed $e) {
+        // Fail for any other methods than GET.
+        if ($_SERVER['REQUEST_METHOD']!=='GET') {
+            throw new Unframed('Method Not Allowed', 405);
+        }
+        // Box the query parameters (and string ,-) in a JSON message
+        $message = new JSONMessage($_GET, $_SERVER['QUERY_STRING']);
+        // Handle the JSON message and reply with JSON ...
+        unframed_ok_json(call_user_func_array($fun, array($message)));
+    } catch (Exception $e) {
+        // ... or catch all and fail fast to HTTP error
         unframed_error_json($e);
     }
 }

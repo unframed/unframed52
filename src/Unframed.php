@@ -1,6 +1,15 @@
 <?php
 
 /**
+ * Test basic requirements of Unframed52, return TRUE if the version of PHP 5.2+.
+ */
+function unframed_test () {
+    return (version_compare(PHP_VERSION, '5.2') >= 0);
+}
+
+// The shims required to support PHP since 5.2 ,-)
+
+/**
  * Unframed's very core: to require a minimum of configuration and fail fast to HTTP.
  *
  * @author Laurent Szyster
@@ -10,18 +19,6 @@ if (!function_exists('http_response_code')) {
     function http_response_code($code) {
         header('x', TRUE, $code);
     }
-}
-
-/**
- * Log an error $message about a $value.
- *
- * @param $message to log
- * @param $value to print
- *
- * @return TRUE on success, FALSE otherwise
- */
-function unframed_debug($message, $value) {
-    return error_log($message.' - '.var_export($value, true));
 }
 
 /**
@@ -57,35 +54,6 @@ if (method_exists(new Exception(), 'getPrevious')) {
 }
 
 /**
- * Apply the callable $fun with $array, throw an exception if the $fun is
- * the name of an undefined function, if $fun is not callable and or if
- * $array is not an array.
- *
- * @param callable $fun the callable to apply
- * @param array $array the arguments to use
- *
- * @return any result of `call_user_func_array($fun, $array)`
- * @throws Unframed
- */
-function unframed_call ($fun, $array) {
-    if (!is_array($array)) {
-        throw new Unframed('Type Error - '.var_export($array, TRUE).' is not an array');
-    }
-    if (is_string($fun) && !function_exists($fun)) {
-        throw new Unframed('Name Error - '.$fun.' does not exist');
-    }
-    if (!is_callable($fun)) {
-        throw new Unframed('Type Error - '.var_export($fun, TRUE).' is not callable');
-    } else {
-        // $errors = new UnframedErrors();
-        // set_error_handler(array($errors, 'push'));
-        $response = call_user_func_array($fun, $array);
-        // restore_error_handler();
-        return $response;
-    }
-}
-
-/**
  * Test if the real path to the SCRIPT_FILENAME is $filename.
  *
  * @param string $filename tested
@@ -93,6 +61,12 @@ function unframed_call ($fun, $array) {
  * @return TRUE if $filename is the real path to SCRIP_FILENAME
  */
 function unframed_is_server_script ($filename) {
+    if (!(
+        isset($_SERVER)
+        && isset($_SERVER['SCRIPT_FILENAME'])
+    )) {
+        return FALSE;
+    }
     return realpath($_SERVER['SCRIPT_FILENAME']) == $filename;
 }
 
@@ -109,27 +83,27 @@ function unframed_no_script ($filename, $code=404) {
     }
 }
 
-/**
- * Test basic requirements of Unframed52, return TRUE on success.
- */
-function unframed_test () {
-    return (
-        version_compare(PHP_VERSION, '5.2.0') >= 0 &&
-        ignore_user_abort() == TRUE
-        );
-}
+unframed_no_script(__FILE__);
 
-/**
- * Recompile the PHP sources in $filename and invalidate the APC or OP cache.
- */
-function unframed_compile ($filename) {
-    // test Zend's opcache_invalidate first
-    if (function_exists('opcache_invalidate')) {
+// unframed52's PHP bytecode cache invalidation, require this once ,-)
+
+// Zend's opcache first, APC second and TRUE without both.
+
+if (function_exists('opcache_invalidate')) {
+    function unframed_invalidate_php ($filename, $sources) {
+        file_put_contents($filename, $sources);
         return opcache_invalidate($filename);
-    } elseif (function_exists('apc_compile_file')) {
+    }
+} elseif (function_exists('apc_compile_file')) {
+    function unframed_invalidate_php ($filename, $sources) {
+        file_put_contents($filename, $sources);
         return apc_compile_file($filename);
     }
-    return TRUE;
+} else {
+    function unframed_invalidate_php ($filename, $sources) {
+        file_put_contents($filename, $sources);
+        return file_exists($filename);
+    }
 }
 
 function unframed_site_url() {
@@ -139,85 +113,16 @@ function unframed_site_url() {
         );
 }
 
-function unframed_configuration () {
-    return dirname(__FILE__).'/.config-'.md5(unframed_site_url()).'.php';
+function unframed_site_key() {
+    return md5(unframed_site_url());
 }
 
-/**
- * Update `.config.php` (and eventually recompile and cache).
- */
-function unframed_configure ($concurrent, $cast_timeout, $loop_timeout) {
-    $filename = unframed_configuration();
-    if (file_put_contents($filename, "<?php\n"
-        ."if (realpath(\$_SERVER['SCRIPT_FILENAME']) == __FILE__) {\n"
-        ."    header('x', TRUE, 404);\n"
-        ."    die();\n"
-        ."}\n"
-        ."define('UNFRAMED_CONCURRENT', ".$concurrent.");\n"
-        ."define('UNFRAMED_CAST_TIMEOUT', ".$cast_timeout.");\n"
-        ."define('UNFRAMED_LOOP_TIMEOUT', ".$loop_timeout.");\n"
-        ."?>") !== FALSE) {
-        return unframed_compile($filename);
-    }
-    return FALSE;
+function unframed_remote_is_local () {
+    $remote = $_SERVER['REMOTE_ADDR'];
+    return ($remote == '127.0.0.1' || $remote == $_SERVER['SERVER_ADDR']);
 }
 
-/**
- * Allways decode JSON to associative arrays.
- *
- * @param string $encoded JSON
- * @return array
- */
-function unframed_json_decode ($encoded) {
-    return json_decode($encoded, TRUE);
+function unframed_realpath ($path, $base=NULL) {
+    return realpath(($base === NULL ? dirname(__FILE__): $base).'/'.$path);
 }
 
-/**
- * Return TRUE if $value is a list, FALSE otherwise.
- *
- * @param any $value
- * @return boolean
- */
-function unframed_is_list ($value) {
-    if (!is_array($value)) {
-        return FALSE;
-    }
-    if (count($value) === 0) {
-        return TRUE;
-    }
-    return (0 === count(array_diff(range(0, count($value)-1), array_keys($value))));
-}
-
-/**
- * Return TRUE if $value is a map, FALSE otherwise.
- *
- * @param any $value
- * @return boolean
- */
-function unframed_is_map ($value) {
-    if (!is_array($value)) {
-        return FALSE;
-    }
-    return (count($value) === count(array_filter(array_keys($value), 'is_string')));
-}
-
-// main
-
-unframed_no_script(__FILE__);
-
-/**
- * First, let the script run through after its input is closed.
- *
- * This ensure that network timeouts don't prevent longer running
- * processes like static resources generation or interrupt
- * database transactions without a rollback.
- */
-
-ignore_user_abort(true);
-
-@include_once(unframed_configuration());
-if (!defined('UNFRAMED_CONCURRENT')) {
-    if (unframed_configure(8, 0.005, 59)) {
-        require(unframed_configuration());
-    }
-}

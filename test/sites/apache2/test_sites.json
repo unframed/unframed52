@@ -3,7 +3,7 @@
 	"httpServer": "apache2",
 	"links": {
 		"src": "unframed52",
-		"test/php": "test"
+		"test/scripts": "test"
 		},
 	"testUnits": []
 }
