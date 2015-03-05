@@ -2,7 +2,7 @@ unframed52
 ===
 "They All Suck" - [Rasmus Lerdorf](https://www.youtube.com/watch?v=anr7DQnMMs0#t=1904).
 
-Use `unframed52` to write new web applications or extend legacy PHP applications with JSON web APIs that run fast, fail safe, sign and verify messages, invalidate web resources properly, schedule jobs reliably and poll queues asynchronously.
+Use `unframed52` to write new web applications or extend legacy PHP applications with JSON web APIs that run fast, fail safe, limit and verify messages, invalidate web resources properly, schedule jobs reliably and poll queues asynchronously.
 
 Requirements
 ---
@@ -20,11 +20,13 @@ Requirements
 
     "*Frameworks Execute The Same Code Repeatedly Without Need*".
 
-Frameworks *all* suck in a front controller that will require all the application's routes classes and functions, probably with all their dependencies and eventually configured. 
+All PHP frameworks suck in a front controller that will require *all* the application's routes classes and functions, probably with *all* their dependencies, eventually configured. 
 
 This design imply needless execution of code in the PHP interpreter to require sources not needed. Also, it invariably leads to framework implementations with to too many interdependent classes, degrading into needlessly complicated solutions and duplicating the web server functions with cache invalidation done wrong. Yes, that's how bad all PHP framework can suck.
 
-So `unframed52` includes no routing to support REST interfaces, nor any other kind of application prototype. Instead of routing all HTTP requests through a single script, write one PHP script for each function the application. 
+By design `unframed52` includes no routing to support REST interfaces, nor any other kind of application prototype.
+
+Write one PHP script for each function the application. 
 
 For instance, here's a `hello_world` function in a script handling a GET request and replying with a JSON response body :
 
@@ -77,12 +79,14 @@ Also note how you may reuse the `hello_world` function defined in that `hello_wo
 For instance to create a new script that handle the POST method :
 
 ~~~php
-require_once(dirname(__FILE__).'/hello_world.php');
+<?php
+require_once('hello_world.php');
 
 if (unframed_is_server_script(__FILE__)) {
     require('unframed52/post_json.php');
     unframed_post_json('hello_world');
 }
+?>
 ~~~
 
 That script will handle this request :
@@ -138,10 +142,22 @@ Throwing an exception yields an HTTP error 500 with a JSON message reporting the
 ~~~json
 HTTP/1.1 500
 Content-Type: application/json
-Content-Length: ...
+Content-Length: 469
 Cache-Control: no-cache, no-store: 0
 
-{...}
+{
+    "exception": {
+        "message": "Failed Fast",
+        "file": "./test\/scripts\/unframed_fail_fast.php",
+        "line": 6,
+        "trace": [
+            "#0 [internal function]: unframed_fail_fast(Object(JSONMessage))",
+            "#1 ./src\/get_json.php(106): call_user_func_array('unframed_fail_f...', Array)",
+            "#2 ./test\/scripts\/unframed_fail_fast.php(11): unframed_get_json('unframed_fail_f...')",
+            "#3 {main}"
+        ]
+    }
+}
 ~~~
 
 Note that HTTP errors other than 500 won't yield a PHP trace in the JSON response and that error responses to HEAD requests won't yield a response body at all.
@@ -299,10 +315,10 @@ Here is a `hello_world_cast.php` script that does not return anything to its cal
 
 ~~~php
 <?php
-require_once('unframed52/hello_world_invalidate.php');
-require_once('unframed52/cast_json.php');
+require_once('hello_world_invalidate.php');
 
 if (unframed_is_server_script(__FILE__)) {
+    require_once('unframed52/cast_json.php');
     unframed_cast_json('hello_world_invalidate');
 }
 ?>
