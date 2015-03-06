@@ -10,7 +10,7 @@ Requirements
 - [Be functional](#be-functional)
 - [Fail fast to HTTP errors](#fail-fast)
 - [Use JSON messages and I/O lists](#use-json-messages)
-- [Limit and verify JSON request body ](#limit-and-verify)
+- [Limit and verify JSON request body ](#limit-and-verify-messages)
 - [Invalidate web resources with PHP callables and templates](#invalidate-web-resources)
 - [Cast messages to concurrent scripts](#concurrent-scripts)
 - [Schedule jobs and poll queues](#schedule-jobs-and-poll-queues)
@@ -18,7 +18,7 @@ Requirements
 
 ### Don't suck
 
-    "*Frameworks Execute The Same Code Repeatedly Without Need*".
+> Frameworks Execute The Same Code Repeatedly Without Need
 
 All PHP frameworks suck in a front controller that will require *all* the application's routes classes and functions, probably with *all* their dependencies, eventually configured. 
 
@@ -68,7 +68,7 @@ And let the web server control access, dispatch to scripts, log requests and rep
 
 ### Be functional
 
-    "*Frameworks require too many interdependent classes*".
+> Frameworks require too many interdependent classes
 
 Note how the `hello_world.php` script above is exclusively made of functions and depends on a single [JSONMessage](https://github.com/laurentszyster/JSONMessage.php) class. As a small library of functions, `unframed52` simply avoids the issues of object oriented design.
 
@@ -110,7 +110,7 @@ As far as protocols and methods, that's almost it for `unframed52` : just enough
 
 ### Fail Fast
 
-    "*Needlessly complicated solutions*".
+> Needlessly complicated solutions
 
 Even without an ORM, an MVC dispatcher or a template language, PHP frameworks  suck with needlessly complicated code. Because, whatever the size, frameworks try to cope with different system configurations, handle or silence errors and application faults. All defensive programming yields complicated code.
 
@@ -249,7 +249,7 @@ More elaborate verification are possible, including verification of cryptographi
 
 ### Invalidate Web Resources
 
-    "*Duplicating the web server functionality*".
+> Duplicating the web server functionality
 
 Don't try to serve idempotent requests for HTML, XML, RSS, nor any other protocol than JSON. Also, don't try to cache the responses. Instead let scripts invalidate resources served and cached by the web.
 
