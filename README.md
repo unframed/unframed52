@@ -6,15 +6,15 @@ Use `unframed52` to write new web applications or extend legacy PHP applications
 
 Requirements
 ---
-- Don't suck
-- Be functional
-- Fail fast to HTTP errors
-- Use JSON messages and I/O lists
-- Limit and verify JSON request body 
-- Invalidate web resources with PHP callables and templates
-- Cast messages to concurrent scripts
-- Schedule jobs and poll queues
-- Support PHP 5.2
+- [Don't suck](#dont-suck)
+- [Be functional](#be-functional)
+- [Fail fast to HTTP errors](#fail-fast)
+- [Use JSON messages and I/O lists](#use-json-messages)
+- [Limit and verify JSON request body ](#limit-and-verify)
+- [Invalidate web resources with PHP callables and templates](#invalidate-web-resources)
+- [Cast messages to concurrent scripts](#concurrent-scripts)
+- [Schedule jobs and poll queues](#schedule-jobs-and-poll-queues)
+- [Support PHP 5.2](#support-php-52)
 
 ### Don't suck
 
@@ -31,7 +31,6 @@ Write one PHP script for each function the application.
 For instance, here's a `hello_world` function in a script handling a GET request and replying with a JSON response body :
 
 ~~~php
-<?php
 require_once('unframed52/Unframed.php');
 
 function hello_world(JSONMessage $message) {
@@ -44,7 +43,6 @@ if (unframed_is_server_script(__FILE__)) {
     require_once('unframed52/get_json.php');
     unframed_get_json('hello_world');
 }
-?>
 ~~~
 
 Call this script `hello_world.php` and let a web server interpret it so that this request :
@@ -79,14 +77,12 @@ Also note how you may reuse the `hello_world` function defined in that `hello_wo
 For instance to create a new script that handle the POST method :
 
 ~~~php
-<?php
 require_once('hello_world.php');
 
 if (unframed_is_server_script(__FILE__)) {
     require('unframed52/post_json.php');
     unframed_post_json('hello_world');
 }
-?>
 ~~~
 
 That script will handle this request :
@@ -123,7 +119,6 @@ On the contrary `unframed52` scripts are expected to fails fast to an HTTP error
 For instance, in a dummy `fail_fast.php` script :
 
 ~~~php
-<?php
 require_once('unframed52/Unframed.php');
 
 function fail_fast(JSONMessage $message) {
@@ -134,12 +129,11 @@ if (unframed_is_server_script(__FILE__)) {
     require_once('unframed52/post_json.php');
     unframed_post_json('fail_fast');
 }
-?>
 ~~~
 
 Throwing an exception yields an HTTP error 500 with a JSON message reporting the PHP exception as body : 
 
-~~~json
+~~~
 HTTP/1.1 500
 Content-Type: application/json
 Content-Length: 469
@@ -211,7 +205,6 @@ Scripts should be able to limit the request body's size, verify it before JSON i
 For instance to limit messages to a maximum of 512 bytes length, a depth of 1 and verify that the body could be a well formed JSON object and not something wildly different : 
 
 ~~~php
-<?php
 require_once('hello_world.php');
 
 function could_be_json_object ($headers, $body) {
@@ -229,7 +222,6 @@ if (unframed_is_server_script(__FILE__)) {
     require_once('unframed52/post_json.php');
     unframed_post_json('hello_world', 512, 1, 'could_be_json_object');
 }
-?>
 ~~~
 
 So that if a bad client send some 'foobar' instead of a JSON object in the request body to this new `authorized_world.php` script:
@@ -266,7 +258,6 @@ Use the `unframed_www_invalidate` function to create or replace files and let th
 Here's the same "Hello World" example, accepting POST request and invalidating JSON and HTML resources that can thereafter be served directly by the web server.
 
 ~~~php
-<?php
 require_once('unframed52/www_invalidate.php');
 
 function hello_world_json (JSONMessage $message) {
@@ -285,7 +276,6 @@ if (unframed_is_server_script(__FILE__)) {
     require_once('unframed52/post_json.php');
     unframed_post_json('hello_world_invalidate');
 }
-?>
 ~~~
 
 Note that Unframed52 allows both function and file names, here a JSON encoder function `hello_world_json` to call and a `hello_word_html.php` template to include :
@@ -314,14 +304,12 @@ In such execution environment how to start concurrent processes ?
 Here is a `hello_world_cast.php` script that does not return anything to its caller and is only accessible locally (ie: from the server) :
 
 ~~~php
-<?php
 require_once('hello_world_invalidate.php');
 
 if (unframed_is_server_script(__FILE__)) {
     require_once('unframed52/cast_json.php');
     unframed_cast_json('hello_world_invalidate');
 }
-?>
 ~~~
 
 This script will apply `hello_world_invalidate` only *after* an HTTP 200 response has been sent. And it will continute to execute that function when the connection is closed prematurely by the client.
@@ -331,7 +319,6 @@ To `unframed_cast` function does exactly that for its applications: POST a JSON 
 Casting `hello_world_invalidate` through `hello_world_cast.php` from a control script is both fast and safe, for instance from a `hello_world_control.php` :
 
 ~~~php
-<?php
 require_once('unframed52/cast_json.php');
 
 function hello_world_control (JSONMessage $message) {
@@ -344,10 +331,11 @@ function hello_world_control (JSONMessage $message) {
 if (unframed_is_server_script(__FILE__)) {
     unframed_post_json('hello_world_control');
 }
-?>
 ~~~
 
 Whatever happens in `hello_world_invalidate` will not block or disrupt the execution of `hello_world_control`.
+
+...
 
 ### Schedule Jobs And Poll Queues
 
@@ -356,23 +344,19 @@ When casting messages is effectively possible it is also possible for a script t
 An `unframed_loop` function is provided to start, stop and run a simple loop that cast a heartbeat message to one or more concurrent scripts. For instance, to periodically cast a message to `error_log.php` :
 
 ~~~php
-<?php
 require_once('unframed52/cast_json.php');
 
 if (unframed_is_server_script(__FILE__)) {
     unframed_cast_json('error_log');
 }
-?>
 ~~~
 
 ~~~php
-<?php
 require 'unframed52/loop_json.php';
 
 unframed_loop(array(
     "/error_log.php"
 ));
-?>
 ~~~
 
 Note that by default `unframed_loop` implements a simple web API to control the loop.
