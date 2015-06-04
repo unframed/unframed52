@@ -16,17 +16,47 @@ if (!defined('UNFRAMED_LOOP_TIMEOUT')) {
     define('UNFRAMED_LOOP_TIMEOUT', 0.1);
 }
 
+function unframed_loop_json (JSONMessage $message, UnframedSemaphores $semaphores, $id) {
+    $now = microtime(TRUE);
+    $uris = $message->getList('uris');
+    $interval = $message->asFloat('interval');
+    $count = $message->asInt('count', 0) + 1;
+    $time = $semaphores->time($id);
+    if (!((time() - $time) < $interval)) {
+        $semaphores->up($id);
+        $state = array(
+            'time' => $now,
+            'interval' => $interval,
+            'count' => $count
+        );
+        unframed_cast_all($uris, $state);
+        $semaphores->disconnect();
+        sleep($interval);
+        $semaphores->connect();
+        if ($semaphores->isUp($id)) {
+            $message->map['count'] = $count;
+            if (!unframed_cast_encoded(
+                unframed_cast_url(), $message->encode(), '', UNFRAMED_LOOP_TIMEOUT
+                )) {
+                $semaphores->down($id);
+            }
+        }
+    }
+}
+
 class UnframedLoop implements UnframedCast {
     protected $id;
     protected $uris;
     protected $semaphores;
-    final function __construct($id, $uris, UnframedSemaphores $semaphores) {
-        $this->id = $id;
+    function __construct($uris, UnframedSemaphores $semaphores=NULL, $id=0) {
         $this->uris = $uris;
-        $this->semaphores = $semaphores;
+        $this->semaphores = (
+            $semaphores === NULL ? new UnframedSemaphoreFiles() : $semaphores
+        );
+        $this->id = $id;
     }
-    final function semaphoreTest () {
-        return !$this->semaphores->test($this->id);
+    final function semaphoreIsUp () {
+        return !$this->semaphores->isUp($this->id);
     }
     final function semaphoreUp () {
         return $this->semaphores->up($this->id);
@@ -37,34 +67,12 @@ class UnframedLoop implements UnframedCast {
     final function semaphoreTime () {
         return $this->semaphores->time($this->id);
     }
-    final function POST (JSONMessage $message) {
-        $now = microtime(TRUE);
-        $uris = $message->getList('uris');
-        $interval = $message->asFloat('interval');
-        $count = $message->asInt('count', 0) + 1;
-        $time = $this->semaphoreTime();
-        if (!((time() - $time) < $interval)) {
-            $this->semaphoreUp();
-            $state = array(
-                'time' => $now,
-                'interval' => $interval,
-                'count' => $count
-                );
-            unframed_cast_all($uris, $state);
-            sleep($interval);
-            if ($this->semaphoreTest()) {
-                $message->map['count'] = $count;
-                if (!unframed_cast_encoded(
-                    unframed_cast_url(), $message->encode(), '', UNFRAMED_LOOP_TIMEOUT
-                    )) {
-                    $this->semaphoreDown();
-                }
-            }
-        }
+    function POST (JSONMessage $message) {
+        unframed_loop_json ($message, $this->semaphores, $this->id);
     }
     final function start ($message) {
-        if ($this->semaphoreTest()) {
-            return TRUE;
+        if ($this->semaphoreIsUp()) {
+            return 0;
         }
         return unframed_cast(unframed_cast_url(), array(
             'uris' => $this->uris,
@@ -72,8 +80,8 @@ class UnframedLoop implements UnframedCast {
         ));
     }
     final function stop ($message) {
-        if (!$this->semaphoreTest()) {
-            return TRUE;
+        if (!$this->semaphoreIsUp()) {
+            return 0;
         }
         return $this->semaphoreDown();
     }
@@ -81,26 +89,24 @@ class UnframedLoop implements UnframedCast {
         return $this->semaphoreTime();
     }
     function GET (JSONMessage $message) {
-        switch ($message->getString('command', 'status')) {
-            case 'start':
-                return array(
-                    'start' => $this->start($message)
-                );
-            case 'stop':
-                return array(
-                    'stop' => $this->stop($message)
-                );
-            case 'status':
-                return array(
-                    'status' => $this->status($message)
-                );
-        }
-        throw new Unframed('Unknown command');
+        return unframed_loop_control($this, $message);
     }
 }
 
-function unframed_loop (array $uris, UnframedSemaphores $semaphores=NULL) {
-    unframed_cast_control(new UnframedLoop(
-        0, $uris, ($semaphores === NULL ? new UnframedSemaphoreFiles() : $semaphores)
-    ));
+function unframed_loop_control (UnframedLoop $loop, JSONMessage $message) {
+    switch ($message->getString('command', 'status')) {
+        case 'start':
+            return array(
+                'start' => $loop->start($message)
+            );
+        case 'stop':
+            return array(
+                'stop' => $loop->stop($message)
+            );
+        case 'status':
+            return array(
+                'status' => $loop->status($message)
+            );
+    }
+    throw new Unframed('Unknown command');
 }

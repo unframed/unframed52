@@ -162,8 +162,10 @@ function unframed_cast_control (UnframedCast $handler) {
 interface UnframedSemaphores {
     function down ($id);
     function up ($id);
-    function test ($id);
+    function isUp ($id);
     function time ($id);
+    function connect ();
+    function disconnect();
 }
 
 class UnframedSemaphoreFiles implements UnframedSemaphores {
@@ -176,11 +178,17 @@ class UnframedSemaphoreFiles implements UnframedSemaphores {
     function up ($id) {
         return touch($this->file($id));
     }
-    function test ($id) {
+    function isUp ($id) {
         return !file_exists($this->file($id));
     }
     function time ($id) {
         return @filemtime($this->file($id));
+    }
+    function connect () {
+        return TRUE;
+    }
+    function disconnect () {
+        return TRUE;
     }
 }
 
