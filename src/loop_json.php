@@ -56,7 +56,7 @@ class UnframedLoop implements UnframedCast {
         $this->id = $id;
     }
     final function semaphoreIsUp () {
-        return !$this->semaphores->isUp($this->id);
+        return $this->semaphores->isUp($this->id);
     }
     final function semaphoreUp () {
         return $this->semaphores->up($this->id);
@@ -72,18 +72,20 @@ class UnframedLoop implements UnframedCast {
     }
     final function start ($message) {
         if ($this->semaphoreIsUp()) {
-            return 0;
+            return false;
         }
-        return unframed_cast(unframed_cast_url(), array(
+        unframed_cast(unframed_cast_url(), array(
             'uris' => $this->uris,
             'interval' => $message->asFloat('interval', UNFRAMED_CAST_INTERVAL)
         ));
+        return true;
     }
     final function stop ($message) {
         if (!$this->semaphoreIsUp()) {
-            return 0;
+            return false;
         }
-        return $this->semaphoreDown();
+        $this->semaphoreDown();
+        return true;
     }
     final function status ($message) {
         return $this->semaphoreTime();
