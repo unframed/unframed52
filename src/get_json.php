@@ -30,9 +30,11 @@ function unframed_ok_json($json, $options=0) {
         $body = '['.implode(',', $json).']';
     } else {
         if (defined('JSON_PRETTY_PRINT')) {
-            $accept = $_SERVER['HTTP_ACCEPT'];
-            if (preg_match('/application.json/i', $accept) < 1) {
-                $options = $options | JSON_PRETTY_PRINT;
+            if (array_key_exists('HTTP_ACCEPT', $_SERVER)) {
+                $accept = $_SERVER['HTTP_ACCEPT'];
+                if (preg_match('/application.json/i', $accept) < 1) {
+                    $options = $options | JSON_PRETTY_PRINT;
+                }
             }
             $body = json_encode($json, $options);
         } else {
