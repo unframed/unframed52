@@ -234,7 +234,7 @@ class UnframedCastTest implements UnframedCast {
                 ), array(), $timeout/1000);
         }
         sleep($sleep + array_sum($timeouts)/1000 + 1);
-        return array_filter($timeouts, array($this->semaphores, 'test'));
+        return array_filter($timeouts, array($this->semaphores, 'isUp'));
     }
     final function testSleeps ($sleeps, $timeout, $concurrent) {
         foreach ($sleeps as $sleep) {
